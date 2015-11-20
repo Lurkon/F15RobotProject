@@ -18,17 +18,19 @@
 #include <time.h>
 
 //function declarations
-void clientCNTCCode();
+int cmdLine(int, char **, char **, int *, int *, int *);
 void draw();
+void writeData();
 
-//abort signal
-int abortsignal = 0;
 
 //buffer size
 #define MAX 300
 
 //Which protocol are we using?
 int protocol = 0;
+
+//Files written
+int written = 0;
 
 /* The plan is to have three major parts to this program:
  *	connection: connect to the proxy
@@ -50,48 +52,32 @@ int main (int argc, char **argv)
 	struct sockaddr_in fromAddr;
 	struct hostent *thehost;
 	unsigned short servPort;
-	unsigned in fromSize;
+	unsigned int fromSize;
 	char buffer[MAX];
 	int respStringLen;
 
 	//check command line parameters
-	if (argc != 5)
+	if(cmdLine(argc, argv, &serverName, &serverPort, &numSides,
+			&sideLength)!=0)
 	{
-		printf("Usage: ./udpclient.c \"serverName\" \"serverPort\"
-			\"numberOfSides\" \"sideLength\"\n");
+		fprintf(stderr,"Usage: ./udpclient.c -h <hostname> -p "
+			"<port> -n <number of sides> -l <length of "
+			"sides>\n");
 		return 0;
 	}
-
-	signal (SIGINT, clientCNTCCode);
-	serverName = argv[1];
-	sscanf(argv[2],"%d",&serverPort);
-	servPort = serverPort;
-	sscanf(argv[3],"%d",&numSides);
-	sscanf(argv[4],"%d",&sideLength);
-	if (serverPort == -1)
-	{
-		printf("Invalid Server Port.\n");
-		return 0;
-	}
-	if (numSides<4||numSides>8)
-	{
-		printf("Invalid number of sides.\n");
-		return 0;
-	}
-	if (sideLength<1)
-	{
-		printf("Invalid side length.\n");
-	}
+	//check command line arguments for validity
 
 	//make connection
 	//Try to connect using Group 9 Protocol!
-	if()
+	/*if()
 	{
 	}
 	else
 	{
+		protocol=1;
 		//Try to connect using Class Protocol!
-	}
+	}*/
+	return 0;
 }
 
 void draw (int N, int L)
@@ -108,4 +94,98 @@ void draw (int N, int L)
 		//send turn 180(N-2)
 		//wait 1
 		//send stop
+}
+
+//cmdLine reads command line arguments into the proper variables.
+//returns -1 if there is an error
+//returns 0 otherwise
+int cmdLine(int argc, char **argv, char **name, int *port, int *n, int *l)
+{
+	int i;
+	int s=0;
+	//name - name of the server
+	for (i=0; i<argc; i++)
+	{
+		if (strcmp(argv[i],"-h")==0)
+		{
+			if (i++ < argc)
+			{
+				s =1;
+				*name = argv[i];
+				i=argc;
+			}
+			else
+			{
+				//out of bounds
+				return -1;
+			}
+		}
+	}
+	if (s==0)
+		return -1;
+	s=0;
+	//port - port of the server
+        for (i=0; i<argc; i++)
+        {
+                if (strcmp(argv[i],"-p")==0)
+                {
+                        if (i++ < argc)
+                        {
+				s=1;
+                                *port = atoi(argv[i]);
+                                i=argc;
+                        }   
+                        else
+                        {
+                                //out of bounds
+                                return -1;
+                        }
+                }
+        }
+	if (s==0)
+		return -1;
+	s=0;
+	//n - number of sides
+        for (i=0; i<argc; i++)
+        {
+                if (strcmp(argv[i],"-n")==0)
+                {
+                        if (i++ < argc)
+                        {
+				s=1;
+                                *n = atoi(argv[i]);
+                                i=argc;
+                        }   
+                        else
+                        {
+                                //out of bounds
+                                return -1;
+                        }
+                }
+        }
+	if(s==0)
+		return -1;
+	s=0;
+
+	//l - length of sides
+        for (i=0; i<argc; i++)
+        {
+                if (strcmp(argv[i],"-l")==0)
+                {
+                        if (i++ < argc)
+                        {
+				s=1;
+                                *l = atoi(argv[i]);
+                                i=argc;
+                        }   
+                        else
+                        {
+                                //out of bounds
+                                return -1;
+                        }
+                }
+        }
+	if (s==0)
+		return -1;
+	return 0;
 }
