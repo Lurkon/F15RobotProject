@@ -17,6 +17,8 @@
 #include <netdb.h>
 #include <time.h>
 
+#include "protocol.h"
+
 //function declarations
 int cmdLine(int, char **, char **, int *, int *, int *);
 void draw();

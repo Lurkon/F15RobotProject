@@ -19,7 +19,7 @@ struct classProtocol
 	int32_t totalSize;
 	int32_t payloadSize;
 	char *payload; //max payload 272 bytes
-}
+};
 
 //Group 9's unique packet header
 struct nineProtocol
@@ -30,4 +30,4 @@ struct nineProtocol
      int32_t totalSize;
      int32_t payloadSize;
      char *payload; //max payload 280 bytes
-}
+};
