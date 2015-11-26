@@ -29,7 +29,7 @@ void writeData();
 #define MAX 300
 
 //Which protocol are we using?
-int protocol = 0;
+int protocol = 9; //default is group protocol
 
 //Files written
 int written = 0;
@@ -55,30 +55,75 @@ int main (int argc, char **argv)
 	struct hostent *thehost;
 	unsigned short servPort;
 	unsigned int fromSize;
-	char buffer[MAX];
+
+	char *buffer[MAX];
 	int respStringLen;
+	//header declarations
+	struct nineProtocol *ourProto;
+	struct classProtocol *claProto;
 
 	//check command line parameters
 	if(cmdLine(argc, argv, &serverName, &serverPort, &numSides,
 			&sideLength)!=0)
 	{
 		fprintf(stderr,"Usage: ./udpclient.c -h <hostname> -p "
-			"<port> -n <number of sides> -l <length of "
-			"sides>\n");
+			"<port> -n <number of sides (4<=n<=8> -l <length "
+			"of sides>\n");
 		return 0;
 	}
-	//check command line arguments for validity
 
-	//make connection
-	//Try to connect using Group 9 Protocol!
-	/*if()
+	servPort=serverPort;
+	if (serverPort==-1)
+	{
+		printf("Invalid Server Port.\n");
+		return 0;
+	}
+	if ((sock=socket(PF_INET,SOCK_DGRAM,IPPROTO_UDP))<0)
+	{
+		printf("socket failed\n");
+		return 0;
+	}
+	struct timeval timeout;
+	timeout.tv_sec=5;
+	timeout.tv_usec=0;
+
+	//set up the server address
+	memset(&servAddr, 0, sizeof(servAddr));
+	servAddr.sin_family=AF_INET;
+	servAddr.sin_addr.s_addr=inet_addr(serverName);
+	servAddr.sin_port=htons(servPort);
+	if(servAddr.sin_addr.s_addr==-1)
+	{
+		thehost=gethostbyname(serverName);
+		servAddr.sin_addr.s_addr=*((unsigned long *)
+			thehost->h_addr_list[0]);
+	}
+
+	//set timeout
+	if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout,
+			sizeof(timeout))<0)
+		fprintf(stderr,"setsockopt send failed\n");
+	//make connection using group protocol
+	//to be implemented
+	if(1)//fail to use the group protocol
+	{
+		protocol=0; //set to class protocol
+		memset(buffer, 0, 28);
+	
+		if(sendto(sock, buffer, MAX, 0, (struct sockaddr *)
+			&servAddr, sizeof(servAddr)) != MAX)
+		{
+			printf("Wrong number of bytes sent\n");
+			return 0;
+		}
+	}
+	if (protocol ==0)//do as the romans do
 	{
 	}
-	else
+	else //do what we do best
 	{
-		protocol=1;
-		//Try to connect using Class Protocol!
-	}*/
+	}
+
 	return 0;
 }
 
