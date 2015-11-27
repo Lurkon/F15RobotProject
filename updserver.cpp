@@ -1,31 +1,57 @@
 #include <iostream>
-#include <cstblib>
-#include <cinttypes>
+#include <cstdlib>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <ctime>
+#include <unistd.h>
+#include <signal.h>
+#include <netdb.h>
+#include <cstring>
 
 #define BUFSIZE 300
 #define HEADSIZE1 28
 #define HEADSIZE2 28
+#define MAXPENDING 5
 
 using namespace std;
 
-struct classProtocol *claProto;
-struct nineProtocol *ourProto;
-string myPass;
-void getImage();
-void getGPS();
-void getdGPS();
-void getLasers();
-void move(int i);
-void turn(int i);
-void stop();
+//struct classProtocol *claProto;
+//struct nineProtocol *ourProto;
+int myPass;
+bool quit=0;
+void getImage()
+{
 
-int32_t ** interpret(int32_t **buffer)
+}
+void getGPS()
+{
+
+}
+void getdGPS()
+{
+
+}
+void getLasers()
+{
+
+}
+void move(int)
+{
+
+}
+void turn(int)
+{
+
+}
+void stop()
+{
+
+}
+
+void interpret1(int *buffer)
 {
    if (buffer[1]==0 && buffer[2]==0)
-   {
       buffer[1]=myPass;
-      return buffer;
-   }
    
    else if (buffer[1]==myPass)
    {
@@ -55,15 +81,54 @@ int32_t ** interpret(int32_t **buffer)
             break;
          case 255:
             myPass=rand();
+            quit=1;
             //reply with ack?
             break;
       }
    }
 }
 
+void interpret2(int command, int data)
+{
+   switch (command)
+   {
+      case 1:
+         myPass=rand();
+         quit=1;
+         //reply with ack?
+         break;
+      case 2:
+         getImage();
+         break;
+      case 4:
+         getGPS();
+         break;
+      case 8:
+         getdGPS();
+         break;
+      case 16:
+         getLasers();
+         break;
+      case 32:
+         move(data);
+         break;
+      case 64:
+         turn(data);
+         break;
+      case 128:
+         sleep(data);
+         stop();
+         break;/*
+      case 255:
+         getRequests(buffer);
+         break;*/
+   }
+}
+
 int main(int argc, char *argv[])
 {
-   int servSock, clntSock, servPort, clntLen, robotNum;
+   int servSock, clntSock, servPort, robotNum;
+   unsigned int clntLen;
    struct sockaddr_in servAddr, clntAddr;
    string robotID, robotName;
    
@@ -74,7 +139,7 @@ int main(int argc, char *argv[])
    myPass=rand();
    if ((servSock=socket(PF_INET,SOCK_STREAM,IPPROTO_TCP))<0)
    {
-      fprintf(stderr,"socket() failed\n");
+      cerr << "socket() failed\n";
       exit(1);
    }
    
@@ -85,13 +150,13 @@ int main(int argc, char *argv[])
    
    if (bind(servSock,(struct sockaddr *) &servAddr,sizeof(servAddr))<0)
    {
-      fprintf(stderr,"bind() failed\n");
+      cerr << "bind() failed\n";
       exit(1);
    }
    
    if (listen(servSock,MAXPENDING)<0)
    {
-      fprintf(stderr,"listen() failed\n");
+      cerr << "listen() failed\n";
       exit(1);
    }
       //design decision, functions for receieve and/or send?
@@ -107,50 +172,76 @@ int main(int argc, char *argv[])
          call interpret
          receive answer from interpret
          respond to client */
-      /* class
-      connect
-      infinite while
-         receive command
-         call interpret
-         receive answer from interpret
-         respond to client */
-      int32_t buffer[BUFSIZE];
+      int buffer[BUFSIZE], recvSize;
+      bool is_class;
       clntLen=sizeof(clntAddr);
       if ((clntSock=accept(servSock,(struct sockaddr *) &clntAddr,&clntLen))<0)
       {
-         fprintf(stderr,"accept() failed\n");
+         cerr << "accept() failed\n";
          exit(1);
       }
       
-      while (1)
+      if ((recvSize=recv(clntSock,buffer,BUFSIZE,0))<0)
       {
-         int recvSize;
-         
-         if ((recvSize=recv(clntSock,buffer,BUFSIZE,0))<0)
-         {
-            fprintf(stderr,"recv() failed\n");
-            exit(1);
-         }
+         cerr << "recv() failed\n";
+         exit(1);
+      }
 
-         buffer=interpret(buffer);
+      if (buffer[0]==0)
+         is_class=0;
+      else
+         is_class=1;
          
-         if (send(clntSock,buffer,HEADSIZE1+buffer[6],0)!=HEADSIZE1+buffer[6])
+      interpret1(buffer); //updates buffer with the response
+      
+      if (send(clntSock,buffer,HEADSIZE1+buffer[6],0)!=HEADSIZE1+buffer[6])
+      {
+         cerr << "send sent a different number of bytes\n";
+         exit(1);
+      }
+   
+      if (is_class)
+      {
+         while (!quit)
          {
-            fprintf(stderr,"send sent a different number of bytes\n");
-            exit(1);
-         }
-/*
-         while (recvSize>0)
-         {
-            fwrite(buffer,recvSize,1,fp);
-            memset(&buffer[0], 0, sizeof(buffer));
             if ((recvSize=recv(clntSock,buffer,BUFSIZE,0))<0)
             {
-               fprintf(stderr,"recv() failed\n");
+               cerr << "recv() failed\n";
                exit(1);
             }
-         }*/
-         close(clntSock);
+
+            interpret1(buffer); //updates buffer with the response
+            
+            if (send(clntSock,buffer,HEADSIZE1+buffer[6],0)!=HEADSIZE1+buffer[6])
+            {
+               cerr << "send sent a different number of bytes\n";
+               exit(1);
+            }
+         }
       }
+      
+      else
+      {
+         if ((recvSize=recv(clntSock,buffer,BUFSIZE,0))<0)
+         {
+            cerr << "recv() failed\n";
+            exit(1);
+         }
+         
+         interpret1(buffer);
+         
+         for (int i=HEADSIZE2; i<HEADSIZE2+buffer[6]; i=i+2)
+         {
+            interpret2(buffer[i],buffer[i+1]);
+            
+            if (send(clntSock,buffer,HEADSIZE1+buffer[6],0)!=HEADSIZE1+buffer[6])
+            {
+               cerr << "send sent a different number of bytes\n";
+               exit(1);
+            }
+         }
+      }
+      quit=0;
+      close(clntSock);
    }
 }
