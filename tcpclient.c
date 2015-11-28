@@ -1,7 +1,13 @@
 #include "tcpclient.h"
 
 int main(){
-	printf("%s", getImage("robot_9", 600, 500));
+	printf("%s\n", getGPS());
+	printf("%s\n", getdGPS());
+	printf("%s\n", getLasers());
+	printf("%s\n", move(4));
+	printf("%s\n", turn(90));
+	printf("%s\n", stop());
+	printf("%s\n", getImage(600, 500));
 }
 
 void openSocket(){
@@ -40,31 +46,31 @@ char* getResponse(){
     return beginning;
 }
 
-char* getImage(char* topic, int width, int height){
+void sendRequest(char* request){
+	//Connect to the server
+    if (connect(sock, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0)
+        DieWithError("connect() failed");
+
+    int requestStringLen = strlen(request);
+
+    //Send request to the server
+    if (send(sock, request, requestStringLen, 0) != requestStringLen)
+        DieWithError("send() sent a different number of bytes than expected");
+}
+
+char* getImage(){
 	openSocket();
 
 	//Set server port
     servAddr.sin_port = htons(8081);
 
     //Set up the request string to the server
-    char* requestHolder = "GET /snapshot?topic=/%s/image?width=%d?height=%d HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
-    char* requestString = malloc(sizeof(char) * (strlen(requestHolder) + strlen(topic) + log10(width) + log10(height)));
+    char* requestString = "GET /snapshot?topic=/robot_9/image?width=600?height=500 HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
 
-    sprintf(requestString, requestHolder, topic, width, height);
-
-    //Connect to the server
-    if (connect(sock, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0)
-        DieWithError("connect() failed");
-
-    int requestStringLen = strlen(requestString);
-
-    //Send request to the server
-    if (send(sock, requestString, requestStringLen, 0) != requestStringLen)
-        DieWithError("send() sent a different number of bytes than expected");
-
+    sendRequest(requestString);
     char* response = getResponse();
 
-    free(requestString);
+    close(sock);
 
 	return response;
 }
@@ -72,43 +78,110 @@ char* getImage(char* topic, int width, int height){
 char* getGPS(){
 	openSocket();
 
-	return NULL;
+	//Set server port
+    servAddr.sin_port = htons(8082);
+
+    //Set up the request string to the server
+    char* requestString = "GET /state?id=5winnow HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+
+    sendRequest(requestString);
+    char* response = getResponse();
+    close(sock);
+
+	return response;
 }
 
 char* getdGPS(){
 	openSocket();
 
-	return NULL;
+	//Set server port
+    servAddr.sin_port = htons(8084);
+
+    //Set up the request string to the server
+    char* requestString = "GET /state?id=5winnow HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+
+    sendRequest(requestString);
+    char* response = getResponse();
+
+    close(sock);
+
+	return response;
 }
 
 char* getLasers(){
 	openSocket();
 
-	return NULL;
+	//Set server port
+    servAddr.sin_port = htons(8083);
+
+    //Set up the request string to the server
+    char* requestString = "GET /state?id=5winnow HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+
+    sendRequest(requestString);
+    char* response = getResponse();
+    
+    close(sock);
+
+	return response;
 }
 
 char* move(int speed){
 	openSocket();
 
-	return NULL;
+	//Set server port
+    servAddr.sin_port = htons(8082);
+
+    //Set up the request string to the server
+    char* requestHolder = "GET /state?id=5winnow&lx=%d HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestString = malloc(sizeof(char) * (strlen(requestHolder) + log10(speed)));
+
+    sprintf(requestString, requestHolder, speed);
+
+    sendRequest(requestString);
+    char* response = getResponse();
+    
+    free(requestString);
+    close(sock);
+
+	return response;
 }
 
 char* turn(int degrees){
 	openSocket();
 
-	return NULL;
+	//Set server port
+    servAddr.sin_port = htons(8082);
+
+    //Set up the request string to the server
+    char* requestHolder = "GET /state?id=5winnow&az=%d HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestString = malloc(sizeof(char) * (strlen(requestHolder) + log10(degrees)));
+
+    sprintf(requestString, requestHolder, degrees);
+
+    sendRequest(requestString);
+    char* response = getResponse();
+    
+    free(requestString);
+    close(sock);
+
+	return response;
 }
 
 char* stop(){
 	openSocket();
 
-	return NULL;
-}
+	//Set server port
+    servAddr.sin_port = htons(8082);
 
-char* sendReceiveRobot(char* message, int length){
-	openSocket();
+    //Set up the request string to the server
+    char* requestString = "GET /state?id=5winnow&lx=0 HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
 
-	return NULL;
+    sendRequest(requestString);
+    char* response = getResponse();
+    
+    close(sock);
+
+	return response;
 }
 
 void DieWithError(char *errorMessage)

@@ -17,12 +17,13 @@ int sockOpen = 0;
 struct sockaddr_in servAddr;
 
 void openSocket();
-char* getImage(char* topic, int width, int height);
+char* getResponse();
+void sendRequest(char* requestString);
+char* getImage();
 char* getGPS();
 char* getdGPS();
 char* getLasers();
 char* move(int speed);
 char* turn(int degrees);
 char* stop();
-char* sendToRobot(char* message, int length);
 void DieWithError(char* errorMessage);
