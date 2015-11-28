@@ -1,6 +1,6 @@
 #include "tcpclient.h"
 
-int main(){
+/*int main(){
 	printf("%s\n", getGPS());
 	printf("%s\n", getdGPS());
 	printf("%s\n", getLasers());
@@ -8,7 +8,7 @@ int main(){
 	printf("%s\n", turn(90));
 	printf("%s\n", stop());
 	printf("%s\n", getImage(600, 500));
-}
+}*/
 
 void openSocket(){
     //Create a socket for a TCP connection
