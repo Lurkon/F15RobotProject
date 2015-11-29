@@ -1,13 +1,25 @@
 #include "tcpclient.h"
 
 /*int main(){
-	printf("%s\n", getGPS());
-	printf("%s\n", getdGPS());
-	printf("%s\n", getLasers());
-	printf("%s\n", move(4));
-	printf("%s\n", turn(90));
-	printf("%s\n", stop());
-	printf("%s\n", getImage(600, 500));
+	char* gps = getGPS();
+
+    while(*gps != EOF){
+        printf("%c", *gps);
+        gps++;
+    }
+    printf("\n");
+	//printf("%s\n", getdGPS());
+	//printf("%s\n", getLasers());
+	//printf("%s\n", move(4));
+	//printf("%s\n", turn(90));
+	//printf("%s\n", stop());
+	char* image = getImage();
+
+    while(*image != EOF){
+        printf("%c", *image);
+        image++;
+    }
+    printf("\n");
 }*/
 
 void openSocket(){
@@ -29,6 +41,7 @@ char* getResponse(){
     int msgCount = 1;
     int totalBytesReceived = 0;
     int bytesReceived;
+
     while((bytesReceived = recv(sock, buffer + totalBytesReceived, RCVBUFSIZE, 0)) > 0)
    	{
    		totalBytesReceived += bytesReceived;
@@ -38,7 +51,7 @@ char* getResponse(){
     }
 
     buffer = realloc(buffer, totalBytesReceived + 1);
-    buffer[totalBytesReceived] = '\0';
+    buffer[totalBytesReceived] = EOF;
 
     char* beginning = strstr(buffer, "\r\n\r\n");
     beginning += 4;
