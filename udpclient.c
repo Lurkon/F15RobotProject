@@ -58,9 +58,12 @@ int main (int argc, char **argv)
 
 	char *buffer[MAX];
 	int respStringLen;
+	int password;
+	int check;
+	int i;
 	//header declarations
-	struct nineProtocol *ourProto;
-	struct classProtocol *claProto;
+	//struct nineProtocol *ourProto;
+	//struct classProtocol *claProto;
 
 	//check command line parameters
 	if(cmdLine(argc, argv, &serverName, &serverPort, &numSides,
@@ -117,30 +120,63 @@ int main (int argc, char **argv)
 			return 0;
 		}
 	}
+	respStringLen=recvfrom(sock, buffer, MAX, 0, (struct sockaddr *)
+		&fromAddr, &fromSize);
 	if (protocol ==0)//do as the romans do
 	{
+	  //check buffer for data
+	  for (i=0; i<13; i=i+4)
+	  {
+	    check = *buffer[i];
+	    check = check<<4;
+	    check = check + *buffer[i+1];
+	    check = check<<4;
+	    check = check + *buffer[i+2];
+	    check = check<<4;
+	    check = check + *buffer[i+3];
+	    if(i==0&&check != protocol)
+	      fprintf(stderr,"Incorrect protocol %d\n",check);
+	      if(i==2)
+		password = check;
+              if(i==4&&check != 0)
+		fprintf(stderr,"error: %d\n", check);
+	    }
+	    //now we're cooking with petrol. Assuming I'm not dumb.
+
+	    for (i=0; i<numSides; i++)
+	    {
+                //send picture
+                //write picture
+                //send move L
+                //wait 1
+                //send stop
+                //send GPS
+                //write GPS
+                //send turn 180(N-2)
+                //wait 1
+                //send stop
+	  }
+	  numSides--;
+            for (i=0; i<numSides; i++)
+            {
+                //send picture
+                //write picture
+                //send move L
+                //wait 1
+                //send stop
+                //send GPS
+                //write GPS
+                //send turn 180(N-2)
+                //wait 1
+                //send stop
+          }
+	  //send stop
 	}
 	else //do what we do best
 	{
 	}
 
 	return 0;
-}
-
-void draw (int N, int L)
-{
-	//int i
-	//for (i=0; i<N; i++
-		//send picture
-		//write picture
-		//send move L
-		//wait 1
-		//send stop
-		//send GPS
-		//write GPS
-		//send turn 180(N-2)
-		//wait 1
-		//send stop
 }
 
 //cmdLine reads command line arguments into the proper variables.
