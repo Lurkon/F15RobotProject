@@ -21,19 +21,20 @@
 //function declarations
 int cmdLine(int, char **, char **, int *, int *, int *);
 char *getResponse();
-char *getImage();
-char *getGPS();
-char *getdGPS();
-char *getLasers();
-char *move(int speed);
-char *turn(int degrees);
-char *stop();
+void getImage();
+void getGPS();
+void getdGPS();
+void getLasers();
+void move(int speed);
+void turn(int degrees);
+void stop();
 void DieWithError(char *errorMessage);
 void openSocket(char **, unsigned short);
 int connectNine();
 int connectClass();
 void draw();
 void writeData();
+void writeImage();
 
 //buffer size
 #define MAX 300
@@ -45,6 +46,8 @@ struct classProtocol cProto;
 
 //Files written
 int written = 0;
+FILE image;
+FILE data;
 
 //socket data
 int sock;
@@ -98,23 +101,46 @@ int main (int argc, char **argv)
 	{
 		if(connectClass()!=0)
 			DieWithError("Could not connect!\n");
+		draw (numSides, sideLength);
+		draw (numSides-1, sideLength);
+		disconnectClass();
 	}
 	return 0;
 }
 
 //connects to the proxy, returns 0 if successful, -1 else
 int connectNine()
-{return -1;}
+{
+return -1;
+}
 
 //connects to the proxy, returns 0 if successful, -1 else
 int connectClass()
 {
 	cProto.protocol=0;
-	cProto.password=0;
+	cProto.password=-1;
 	cProto.cliRequest=0;
-	sendto(sock,&cProto,MAX,0,(struct sockaddr *) 
-		&servAddr,sizeof(servAddr));
+	if(sendto(sock,&cProto,MAX,0,(struct sockaddr *) 
+		&servAddr,sizeof(servAddr))!=MAX)
+		return -1;
+	recvfrom(sock, &cProto, MAX, 0, (struct sockaddr *)
+		&fromAddr, &fromSize);
+	if(cProto.protocol != 0)
+		return -1;
+	password = cProto.password;
+	if(cProto.cliRequest ==0)
+		return 0;
 	return -1;
+}
+void disconnectClass()
+{
+        cProto.protocol=0;
+        cProto.password=password; 
+        cProto.cliRequest=255;
+        if(sendto(sock,&cProto,MAX,0,(struct sockaddr *)
+                &servAddr,sizeof(servAddr))!=MAX)
+          	DieWithError("Could not Quit.\n");
+
 }
 
 //create a socket for a udp connection to the server
@@ -144,19 +170,22 @@ void openSocket(char **servIP, unsigned short servPort)
                 DieWithError("setsockopt send failed\n");
 }
 
-void draw()
+void draw(int n, int l)
 {
-	// for (i=0; i<numSides; i++)
-		//send picture
-		//write picture
-		//send move l
-		//wait 1
-		//send stop
-		//send GPS
-		//write GPS
-		//send turn equation with n
-		//wait 1
-		//send stop
+	int i;
+	for (i=0; i<n; i++)
+	{
+/*		getGPS();
+		getImage();
+		move(l);
+		wait(1);
+		stop();
+		getdGPS();
+		turn(n);
+		wait(1);
+		stop();
+*/
+	}
 }
 
 //cmdLine reads command line arguments into the proper variables.
