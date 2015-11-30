@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdlib>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <ctime>
@@ -7,6 +8,8 @@
 #include <signal.h>
 #include <netdb.h>
 #include <cstring>
+#include <stdio.h>
+#include "tcpclient.h"
 
 #define BUFSIZE 300
 #define HEADSIZE1 28
@@ -19,105 +22,103 @@ using namespace std;
 //struct nineProtocol *ourProto;
 int myPass;
 bool quit=0;
-void getImage()
-{
 
-}
-void getGPS()
+void sendData(char *data, unsigned int *buffer)
 {
-
-}
-void getdGPS()
-{
-
-}
-void getLasers()
-{
-
-}
-void move(int)
-{
-
-}
-void turn(int)
-{
-
-}
-void stop()
-{
-
+   int i=0;
+   while (data[i]!=EOF)
+   {
+      //cout << data[i];
+      i++;
+   }
+   cout << endl << i << endl;
 }
 
-void interpret1(int *buffer)
+void interpret1(unsigned int *buffer)
 {
+   for (int i=0;i<75;i++)
+      buffer[i]=htonl(buffer[i]);
    if (buffer[1]==0 && buffer[2]==0)
+   {
       buffer[1]=myPass;
+      cout << "Connect\n";
+   }
    
    else if (buffer[1]==myPass)
    {
       switch (buffer[2])
       {
          case 2:
-            getImage();
+            sendData(getImage(), buffer);
             break;
          case 4:
-            getGPS();
+            sendData(getGPS(), buffer);
             break;
          case 8:
-            getdGPS();
+            sendData(getdGPS(), buffer);
             break;
          case 16:
-            getLasers();
+            sendData(getLasers(), buffer);
             break;
          case 32:
-            move(buffer[3]);
+            sendData(move(buffer[3]), buffer);
             break;
          case 64:
-            turn(buffer[3]);
+            sendData(turn(buffer[3]), buffer);
             break;
          case 128:
             sleep(buffer[3]);
-            stop();
+            sendData(stop(), buffer);
             break;
          case 255:
             myPass=rand();
             quit=1;
+            //cout << "Quit\n";
             //reply with ack?
             break;
       }
    }
+   for (int i=0;i<75;i++)
+      buffer[i]=ntohl(buffer[i]);
 }
 
-void interpret2(int command, int data)
+void interpret2(unsigned char command, unsigned char data, unsigned int *buffer)
 {
+	//cout << (int) command << "|" << (int) data << endl;
    switch (command)
    {
       case 1:
          myPass=rand();
          quit=1;
+         //cout << "Quit\n";
          //reply with ack?
          break;
       case 2:
-         getImage();
+         cout << "Image: \n";
+         //cout << (int *) getImage();
+         sendData(getImage(), buffer);
          break;
       case 4:
-         getGPS();
+         sendData(getGPS(), buffer);
          break;
       case 8:
-         getdGPS();
+         sendData(getdGPS(), buffer);
          break;
       case 16:
-         getLasers();
+         sendData(getLasers(), buffer);
          break;
       case 32:
-         move(data);
+         cout << "Move: ";
+         sendData(move(data), buffer);
          break;
       case 64:
-         turn(data);
+         cout << "Turn: ";
+         sendData(turn(data), buffer);
          break;
       case 128:
          sleep(data);
-         stop();
+         cout << "Stop: ";
+         sendData(stop(), buffer);
          break;/*
       case 255:
          getRequests(buffer);
@@ -127,21 +128,23 @@ void interpret2(int command, int data)
 
 int main(int argc, char *argv[])
 {
-   int servSock, clntSock, servPort, robotNum;
+   int clntSock, servSock, servPort, robotNum;
    unsigned int clntLen;
    struct sockaddr_in servAddr, clntAddr;
-   string robotID, robotName;
-   
-   robotName="169.55.155.236"; //fill from -h?
-   robotNum=9; //fill from -n?
-   robotID="5winnow"; //fill from -i?
-   servPort=0; //fill from -p
+
+   servPort=8080; //fill from -p
    myPass=rand();
-   if ((servSock=socket(PF_INET,SOCK_STREAM,IPPROTO_TCP))<0)
+   if ((servSock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
    {
-      cerr << "socket() failed\n";
+      fprintf(stderr,"socket failed\n");
       exit(1);
    }
+   
+   const int trueValue = 1;
+   setsockopt(servSock, SOL_SOCKET, SO_REUSEADDR, &trueValue, sizeof(trueValue));
+   #ifdef __APPLE__   // MacOS/X requires an additional call also
+   setsockopt(servSock, SOL_SOCKET, SO_REUSEPORT, &trueValue, sizeof(trueValue));
+   #endif
    
    memset(&servAddr,0,sizeof(servAddr));
    servAddr.sin_family=AF_INET;
@@ -154,91 +157,104 @@ int main(int argc, char *argv[])
       exit(1);
    }
    
-   if (listen(servSock,MAXPENDING)<0)
-   {
-      cerr << "listen() failed\n";
-      exit(1);
-   }
-      //design decision, functions for receieve and/or send?
-      //DD, global rec/send variables or passed back in a pointer?
    while (1)
    {
-      /* ours
-      connect
-      receive
-      respond with pw
-      receive once (loop eventually?)
-      for loop through commands
-         call interpret
-         receive answer from interpret
-         respond to client */
-      int buffer[BUFSIZE], recvSize;
+      cout << "New Client\n";
+      unsigned int buffer[BUFSIZE], recvSize;
       bool is_class;
       clntLen=sizeof(clntAddr);
-      if ((clntSock=accept(servSock,(struct sockaddr *) &clntAddr,&clntLen))<0)
-      {
-         cerr << "accept() failed\n";
-         exit(1);
-      }
       
-      if ((recvSize=recv(clntSock,buffer,BUFSIZE,0))<0)
+      if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &clntAddr, &clntLen))<0)
       {
-         cerr << "recv() failed\n";
+         cerr << "recv() failed 1\n";
+         close(clntSock);
          exit(1);
       }
 
       if (buffer[0]==0)
-         is_class=0;
-      else
          is_class=1;
+      else
+         is_class=0;
          
       interpret1(buffer); //updates buffer with the response
       
-      if (send(clntSock,buffer,HEADSIZE1+buffer[6],0)!=HEADSIZE1+buffer[6])
+      if (sendto(servSock, buffer, BUFSIZE, 0, 
+      (struct sockaddr *) &clntAddr, sizeof(clntAddr)) != BUFSIZE)
       {
          cerr << "send sent a different number of bytes\n";
+         close(clntSock);
          exit(1);
       }
-   
+      
       if (is_class)
       {
          while (!quit)
          {
-            if ((recvSize=recv(clntSock,buffer,BUFSIZE,0))<0)
+            if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &clntAddr, &clntLen))<0)
             {
-               cerr << "recv() failed\n";
+               cerr << "recv() failed 1\n";
+               close(clntSock);
                exit(1);
             }
-
+            
             interpret1(buffer); //updates buffer with the response
             
-            if (send(clntSock,buffer,HEADSIZE1+buffer[6],0)!=HEADSIZE1+buffer[6])
-            {
-               cerr << "send sent a different number of bytes\n";
-               exit(1);
-            }
+            if (sendto(servSock, buffer, BUFSIZE, 0, 
+               (struct sockaddr *) &clntAddr, sizeof(clntAddr)) != BUFSIZE)
+               {
+                  cerr << "send sent a different number of bytes\n";
+                  close(clntSock);
+                  exit(1);
+               }
          }
+         quit=0;
       }
       
       else
-      {
+      {/*
          if ((recvSize=recv(clntSock,buffer,BUFSIZE,0))<0)
          {
             cerr << "recv() failed\n";
+            close(clntSock);
+            exit(1);
+         }*/
+         
+         if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &clntAddr, &clntLen))<0)
+         {
+            cerr << "recv() failed\n";
+            close(clntSock);
             exit(1);
          }
          
-         interpret1(buffer);
-         
-         for (int i=HEADSIZE2; i<HEADSIZE2+buffer[6]; i=i+2)
+         unsigned char *buff=new unsigned char[BUFSIZE-HEADSIZE2];
+         int j=0;
+         for (int i=HEADSIZE2; i<BUFSIZE; i+=4)
          {
-            interpret2(buffer[i],buffer[i+1]);
-            
-            if (send(clntSock,buffer,HEADSIZE1+buffer[6],0)!=HEADSIZE1+buffer[6])
+            buff[j] = (htonl(buffer[i/4]) >> 24) & 0xFF;
+            buff[j+1] = (htonl(buffer[i/4]) >> 16) & 0xFF;
+            buff[j+2] = (htonl(buffer[i/4]) >> 8) & 0xFF;
+            buff[j+3] = htonl(buffer[i/4]) & 0xFF;
+            j+=4;
+         }
+
+         for (int i=0; i<htonl(buffer[6]); i+=2)
+         {
+            interpret2(buff[i],buff[i+1],buffer);
+            /*
+            if (send(clntSock,buffer,BUFSIZE,0)!=BUFSIZE)
             {
                cerr << "send sent a different number of bytes\n";
+               close(clntSock);
                exit(1);
-            }
+            }*/
+            
+            if (sendto(servSock, buffer, BUFSIZE, 0, 
+             (struct sockaddr *) &clntAddr, sizeof(clntAddr)) != BUFSIZE)
+             {
+               cerr << "send sent a different number of bytes\n";
+               close(clntSock);
+               exit(1);
+             }
          }
       }
       quit=0;
