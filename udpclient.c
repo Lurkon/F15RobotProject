@@ -160,7 +160,7 @@ return -1;
 int connectClass()
 {
 	proto.class.protocol=0;
-	proto.class.password=-1;
+	proto.class.password=0;
 	proto.class.cliRequest=0;
 	if(sendto(sock,&proto,MAX,0,(struct sockaddr *) 
 		&servAddr,sizeof(servAddr))!=MAX)
