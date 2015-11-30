@@ -71,6 +71,7 @@ int main (int argc, char **argv)
 	int numSides;
 	int sideLength;
 	unsigned short servPort;
+	int i, j;
 
 	//check command line parameters
 	if(cmdLine(argc, argv, &serverName, &serverPort, &numSides,
@@ -100,6 +101,8 @@ int main (int argc, char **argv)
 		proto.nine.protocol = 9;
 		proto.nine.password = password;
 		char *index = proto.nine.payload;
+		for (j=0; j<2; j++)
+		{
 		for (i=0; i<numSides; i++)
 		{
 			index=2;
@@ -130,6 +133,8 @@ int main (int argc, char **argv)
 			index++;
 			index=0;
 			index++;
+		}
+		numsides--;
 		}
 	}
 	else
