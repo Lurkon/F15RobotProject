@@ -20,18 +20,18 @@ using namespace std;
 
 //struct classProtocol *claProto;
 //struct nineProtocol *ourProto;
-int myPass;
+unsigned int myPass;
 bool quit=0;
 
 void sendData(char *data, unsigned int *buffer)
 {
-   int i=0;
-   while (data[i]!=EOF)
+   int size=(int) data[0];
+   cout << size << endl;
+   for (int i=0;i<size;i++)
    {
-      //cout << data[i];
-      i++;
+      cout << (int) data[i];
    }
-   cout << endl << i << endl;
+   free(data);
 }
 
 void interpret1(unsigned int *buffer)
@@ -128,6 +128,7 @@ void interpret2(unsigned char command, unsigned char data, unsigned int *buffer)
 
 int main(int argc, char *argv[])
 {
+   srand(time(NULL));
    int clntSock, servSock, servPort, robotNum;
    unsigned int clntLen;
    struct sockaddr_in servAddr, clntAddr;
@@ -176,7 +177,7 @@ int main(int argc, char *argv[])
       else
          is_class=0;
          
-      interpret1(buffer); //updates buffer with the response
+      interpret1(buffer); //updates buffer with the password
       
       if (sendto(servSock, buffer, BUFSIZE, 0, 
       (struct sockaddr *) &clntAddr, sizeof(clntAddr)) != BUFSIZE)
@@ -211,14 +212,7 @@ int main(int argc, char *argv[])
       }
       
       else
-      {/*
-         if ((recvSize=recv(clntSock,buffer,BUFSIZE,0))<0)
-         {
-            cerr << "recv() failed\n";
-            close(clntSock);
-            exit(1);
-         }*/
-         
+      {
          if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &clntAddr, &clntLen))<0)
          {
             cerr << "recv() failed\n";
