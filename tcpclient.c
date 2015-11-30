@@ -8,49 +8,80 @@ struct sockaddr_in servAddr;
 
 int main(){
 	char* gps = getGPS();
+    int size = *(int*)gps;
+    gps += 4;
+    int i;
 
-    while(*gps != EOF){
+    for(i = 0; i<size; i++){
         printf("%c", *gps);
         gps++;
     }
     printf("\n");
 
-    char* dgps = getdGPS();
 
-    while(*dgps != EOF){
+    char* dgps = getdGPS();
+    size = *(int*)dgps;
+    dgps += 4;
+
+    for(i = 0; i<size; i++){
         printf("%c", *dgps);
         dgps++;
     }
     printf("\n");
 	
+    
     char* lasers = getLasers();
+    size = *(int*)lasers;
+    lasers += 4;
 
-    while(*lasers != EOF){
+    for(i = 0; i<size; i++){
         printf("%c", *lasers);
         lasers++;
     }
     printf("\n");
-	
-    char* moves = move(5);
 
-    while(*moves != EOF){
+
+    char* turns = turn(30);
+    size = *(int*)turns;
+    turns += 4;
+
+    for(i = 0; i<size; i++){
+        printf("%c", *turns);
+        turns++;
+    }
+    printf("\n");
+	
+    
+    char* moves = move(4);
+    size = *(int*)moves;
+    moves += 4;
+
+    for(i = 0; i<size; i++){
         printf("%c", *moves);
         moves++;
     }
     printf("\n");
 
-    char* stops = stop();
 
-    while(*stops != EOF){
+    char* stops = stop();
+    size = *(int*)stops;
+    stops += 4;
+
+    for(i = 0; i<size; i++){
         printf("%c", *stops);
         stops++;
     }
     printf("\n");
 
-    char* image = getImage();
 
-    while(*image != EOF){
-        printf("%c", *image);
+    FILE* fp = fopen("test.jpg", "w+");
+
+    char* image = getImage();
+    size = *(int*)image;
+    image += 4;
+
+    for(i = 0; i<size; i++){
+        fprintf(fp, "%c", *image);
         image++;
     }
     printf("\n");
@@ -83,13 +114,8 @@ char* getResponse(){
     	msgCount++;
     }
 
-    buffer = realloc(buffer, totalBytesReceived + 1);
-    buffer[totalBytesReceived] = EOF;
-
     char* beginning = strstr(buffer, "\r\n\r\n");
-    beginning += 4;
-
-    printf("%d\n", totalBytesReceived - ((int)(beginning-buffer)));
+    *(int*) beginning = totalBytesReceived - (int)(beginning-buffer) - 4;
 
     return beginning;
 }
