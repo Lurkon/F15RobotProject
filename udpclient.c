@@ -16,23 +16,42 @@
 #include <signal.h>
 #include <netdb.h>
 #include <time.h>
-
 #include "protocol.h"
 
 //function declarations
 int cmdLine(int, char **, char **, int *, int *, int *);
+char *getResponse();
+char *getImage();
+char *getGPS();
+char *getdGPS();
+char *getLasers();
+char *move(int speed);
+char *turn(int degrees);
+char *stop();
+void DieWithError(char *errorMessage);
+void openSocket(char **, unsigned short);
+int connectNine();
+int connectClass();
 void draw();
 void writeData();
-
 
 //buffer size
 #define MAX 300
 
 //Which protocol are we using?
 int protocol = 9; //default is group protocol
+int password = 0;
+struct classProtocol cProto;
 
 //Files written
 int written = 0;
+
+//socket data
+int sock;
+int sockOpen = 0;
+struct sockaddr_in servAddr;
+struct sockaddr_in fromAddr;
+unsigned int fromSize;
 
 /* The plan is to have three major parts to this program:
  *	connection: connect to the proxy
@@ -47,23 +66,7 @@ int main (int argc, char **argv)
 	int serverPort;
 	int numSides;
 	int sideLength;
-
-	//UDP Declarations
-	int sock;
-	struct sockaddr_in servAddr;
-	struct sockaddr_in fromAddr;
-	struct hostent *thehost;
 	unsigned short servPort;
-	unsigned int fromSize;
-
-	char *buffer[MAX];
-	int respStringLen;
-	int password;
-	int check;
-	int i;
-	//header declarations
-	//struct nineProtocol *ourProto;
-	//struct classProtocol *claProto;
 
 	//check command line parameters
 	if(cmdLine(argc, argv, &serverName, &serverPort, &numSides,
@@ -81,102 +84,79 @@ int main (int argc, char **argv)
 		printf("Invalid Server Port.\n");
 		return 0;
 	}
-	if ((sock=socket(PF_INET,SOCK_DGRAM,IPPROTO_UDP))<0)
-	{
-		printf("socket failed\n");
-		return 0;
-	}
-	struct timeval timeout;
-	timeout.tv_sec=5;
-	timeout.tv_usec=0;
 
-	//set up the server address
-	memset(&servAddr, 0, sizeof(servAddr));
-	servAddr.sin_family=AF_INET;
-	servAddr.sin_addr.s_addr=inet_addr(serverName);
-	servAddr.sin_port=htons(servPort);
-	if(servAddr.sin_addr.s_addr==-1)
+
+	//This is now actual connection things
+	openSocket(&serverName, servPort);
+
+	//make connection using group 9 protocol
+	if(connectNine()==0)
 	{
-		thehost=gethostbyname(serverName);
-		servAddr.sin_addr.s_addr=*((unsigned long *)
-			thehost->h_addr_list[0]);
+		//good connection
 	}
+	else
+	{
+		if(connectClass()!=0)
+			DieWithError("Could not connect!\n");
+	}
+	return 0;
+}
+
+//connects to the proxy, returns 0 if successful, -1 else
+int connectNine()
+{return -1;}
+
+//connects to the proxy, returns 0 if successful, -1 else
+int connectClass()
+{
+	cProto.protocol=0;
+	cProto.password=0;
+	cProto.cliRequest=0;
+	sendto(sock,&cProto,MAX,0,(struct sockaddr *) 
+		&servAddr,sizeof(servAddr));
+	return -1;
+}
+
+//create a socket for a udp connection to the server
+void openSocket(char **servIP, unsigned short servPort)
+{
+	if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP))<0)
+		DieWithError("socket() failed\n");
+
+	//build the server address
+        memset(&servAddr, 0, sizeof(servAddr));
+        servAddr.sin_family=AF_INET;
+        servAddr.sin_addr.s_addr=inet_addr(*servIP);
+        servAddr.sin_port=htons(servPort);
+        if(servAddr.sin_addr.s_addr==-1)
+        {
+                struct hostent *thehost=gethostbyname(*servIP);
+                servAddr.sin_addr.s_addr=*((unsigned long *)
+                        thehost->h_addr_list[0]);
+        }
 
 	//set timeout
-	if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout,
-			sizeof(timeout))<0)
-		fprintf(stderr,"setsockopt send failed\n");
-	//make connection using group protocol
-	//to be implemented
-	if(1)//fail to use the group protocol
-	{
-		protocol=0; //set to class protocol
-		memset(buffer, 0, 28);
-	
-		if(sendto(sock, buffer, MAX, 0, (struct sockaddr *)
-			&servAddr, sizeof(servAddr)) != MAX)
-		{
-			printf("Wrong number of bytes sent\n");
-			return 0;
-		}
-	}
-	respStringLen=recvfrom(sock, buffer, MAX, 0, (struct sockaddr *)
-		&fromAddr, &fromSize);
-	if (protocol ==0)//do as the romans do
-	{
-	  //check buffer for data
-	  for (i=0; i<13; i=i+4)
-	  {
-	    check = *buffer[i];
-	    check = check<<4;
-	    check = check + *buffer[i+1];
-	    check = check<<4;
-	    check = check + *buffer[i+2];
-	    check = check<<4;
-	    check = check + *buffer[i+3];
-	    if(i==0&&check != protocol)
-	      fprintf(stderr,"Incorrect protocol %d\n",check);
-	      if(i==2)
-		password = check;
-              if(i==4&&check != 0)
-		fprintf(stderr,"error: %d\n", check);
-	    }
-	    //now we're cooking with petrol. Assuming I'm not dumb.
+        struct timeval timeout;               
+        timeout.tv_sec=5;
+        timeout.tv_usec=0;
+        if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout,
+                        sizeof(timeout))<0)
+                DieWithError("setsockopt send failed\n");
+}
 
-	    for (i=0; i<numSides; i++)
-	    {
-                //send picture
-                //write picture
-                //send move L
-                //wait 1
-                //send stop
-                //send GPS
-                //write GPS
-                //send turn 180(N-2)
-                //wait 1
-                //send stop
-	  }
-	  numSides--;
-            for (i=0; i<numSides; i++)
-            {
-                //send picture
-                //write picture
-                //send move L
-                //wait 1
-                //send stop
-                //send GPS
-                //write GPS
-                //send turn 180(N-2)
-                //wait 1
-                //send stop
-          }
-	  //send stop
-	}
-	else //do what we do best
-	{
-	}
-
-	return 0;
+void draw()
+{
+	// for (i=0; i<numSides; i++)
+		//send picture
+		//write picture
+		//send move l
+		//wait 1
+		//send stop
+		//send GPS
+		//write GPS
+		//send turn equation with n
+		//wait 1
+		//send stop
 }
 
 //cmdLine reads command line arguments into the proper variables.
@@ -271,4 +251,10 @@ int cmdLine(int argc, char **argv, char **name, int *port, int *n, int *l)
 	if (s==0)
 		return -1;
 	return 0;
+}
+
+void DieWithError(char *errorMessage)
+{
+	perror(errorMessage);
+	exit(1);
 }
