@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -10,12 +14,6 @@
 
 #define RCVBUFSIZE 32
 
-char* servIP = "169.55.155.236";
-char* robotID = "robot_9";
-int sock;
-int sockOpen = 0;
-struct sockaddr_in servAddr;
-
 void openSocket();
 char* getResponse();
 void sendRequest(char* requestString);
@@ -27,3 +25,7 @@ char* move(int speed);
 char* turn(int degrees);
 char* stop();
 void DieWithError(char* errorMessage);
+
+#ifdef __cplusplus
+}
+#endif
