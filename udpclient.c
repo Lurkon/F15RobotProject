@@ -224,12 +224,12 @@ void draw(int n, int l)
 	int i;
 	for (i=0; i<n; i++)
 	{
-		getGPS();
-		getImage();
+		//getGPS();
+		//getImage();
 		move(l);
 		sleep(1);
 		stop();
-		getdGPS();
+		//getdGPS();
 		turn(n);
 		sleep(1);
 		stop();
