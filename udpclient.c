@@ -274,8 +274,8 @@ void getImage()
 {
         proto.class.protocol=0;
         proto.class.password=password;
-        proto.class.cliRequest=64;  
-        proto.class.requestData = 14/n;
+        proto.class.cliRequest=2;  
+        proto.class.requestData = 0;
         sendto(sock,&proto,MAX,0,(struct sockaddr *)
                 &servAddr,sizeof(servAddr));
 	//RECEIEVE DATA
@@ -285,8 +285,8 @@ void getGPS()
 {
         proto.class.protocol=0;
         proto.class.password=password;
-        proto.class.cliRequest=64;  
-        proto.class.requestData = 14/n;
+        proto.class.cliRequest=4;  
+        proto.class.requestData = 0;
         sendto(sock,&proto,MAX,0,(struct sockaddr *)
                 &servAddr,sizeof(servAddr));
 
