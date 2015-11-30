@@ -105,36 +105,36 @@ int main (int argc, char **argv)
 		{
 		for (i=0; i<numSides; i++)
 		{
-			index=2;
+			*index=2;
 			index++;
-			index=0;
+			*index=0;
 			index++;
-			index=32;//move
+			*index=32;//move
 			index++;
-			index=sidelength;
+			*index=(char) sideLength;
 			index++;
-			index=128;//stop
+			*index=128;//stop
 			index++;
-			index=1;
+			*index=1;
 			index++;
-			index=4;//GPS
+			*index=4;//GPS
 			index++;
-			index=0;
+			*index=0;
 			index++;
-			index=64;//turn
+			*index=64;//turn
 			index++;
-			index=14/n;
+			*index=14/numSides;
 			index++;
-			index=128;//stop
+			*index=128;//stop
 			index++;
-			index=1;
+			*index=1;
 			index++;
-			index=8;//dgps
+			*index=8;//dgps
 			index++;
-			index=0;
+			*index=0;
 			index++;
 		}
-		numsides--;
+		numSides--;
 		}
 	}
 	else
@@ -220,11 +220,11 @@ void draw(int n, int l)
 /*		getGPS();
 		getImage();*/
 		move(l);
-		wait(1);
+		sleep(1);
 		stop();/*
 		getdGPS();
 		turn(n);
-		wait(1);
+		sleep(1);
 		stop();
 */
 	}
