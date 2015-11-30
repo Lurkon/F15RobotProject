@@ -149,10 +149,10 @@ int main (int argc, char **argv)
 		protocol=0;
 		if(connectClass()!=0)
 			DieWithError("Could not connect!\n");
-		printf("pass: %d\n",password);
-		//draw (numSides, sideLength);
-		//draw (numSides-1, sideLength);
-		//disconnectClass();
+printf("pass: %d\n",password);
+		draw (numSides, sideLength);
+		draw (numSides-1, sideLength);
+		disconnectClass();
 	}
 	return 0;
 }
