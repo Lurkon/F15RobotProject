@@ -32,6 +32,7 @@ void DieWithError(char *errorMessage);
 void openSocket(char **, unsigned short);
 int connectNine();
 int connectClass();
+void disconnectClass();
 void draw();
 void writeData();
 void writeImage();
@@ -42,7 +43,7 @@ void writeImage();
 //Which protocol are we using?
 int protocol = 9; //default is group protocol
 int password = 0;
-struct classProtocol cProto;
+union Protocol proto;
 
 //Files written
 int written = 0;
@@ -96,14 +97,50 @@ int main (int argc, char **argv)
 	if(connectNine()==0)
 	{
 		//good connection
+		proto.nine.protocol = 9;
+		proto.nine.password = password;
+		char *index = proto.nine.payload;
+		for (i=0; i<numSides; i++)
+		{
+			index=2;
+			index++;
+			index=0;
+			index++;
+			index=32;//move
+			index++;
+			index=sidelength;
+			index++;
+			index=128;//stop
+			index++;
+			index=1;
+			index++;
+			index=4;//GPS
+			index++;
+			index=0;
+			index++;
+			index=64;//turn
+			index++;
+			index=14/n;
+			index++;
+			index=128;//stop
+			index++;
+			index=1;
+			index++;
+			index=8;//dgps
+			index++;
+			index=0;
+			index++;
+		}
 	}
 	else
 	{
+		protocol=0;
 		if(connectClass()!=0)
 			DieWithError("Could not connect!\n");
-		draw (numSides, sideLength);
-		draw (numSides-1, sideLength);
-		disconnectClass();
+		printf("pass: %d\n",password);
+		//draw (numSides, sideLength);
+		//draw (numSides-1, sideLength);
+		//disconnectClass();
 	}
 	return 0;
 }
@@ -117,27 +154,27 @@ return -1;
 //connects to the proxy, returns 0 if successful, -1 else
 int connectClass()
 {
-	cProto.protocol=0;
-	cProto.password=-1;
-	cProto.cliRequest=0;
-	if(sendto(sock,&cProto,MAX,0,(struct sockaddr *) 
+	proto.class.protocol=0;
+	proto.class.password=-1;
+	proto.class.cliRequest=0;
+	if(sendto(sock,&proto,MAX,0,(struct sockaddr *) 
 		&servAddr,sizeof(servAddr))!=MAX)
 		return -1;
-	recvfrom(sock, &cProto, MAX, 0, (struct sockaddr *)
+	recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
 		&fromAddr, &fromSize);
-	if(cProto.protocol != 0)
+	if(proto.class.protocol != 0)
 		return -1;
-	password = cProto.password;
-	if(cProto.cliRequest ==0)
+	password = proto.class.password;
+	if(proto.class.cliRequest ==0)
 		return 0;
 	return -1;
 }
 void disconnectClass()
 {
-        cProto.protocol=0;
-        cProto.password=password; 
-        cProto.cliRequest=255;
-        if(sendto(sock,&cProto,MAX,0,(struct sockaddr *)
+        proto.class.protocol=0;
+        proto.class.password=password; 
+        proto.class.cliRequest=255;
+        if(sendto(sock,&proto,MAX,0,(struct sockaddr *)
                 &servAddr,sizeof(servAddr))!=MAX)
           	DieWithError("Could not Quit.\n");
 
@@ -176,15 +213,39 @@ void draw(int n, int l)
 	for (i=0; i<n; i++)
 	{
 /*		getGPS();
-		getImage();
+		getImage();*/
 		move(l);
 		wait(1);
-		stop();
+		stop();/*
 		getdGPS();
 		turn(n);
 		wait(1);
 		stop();
 */
+	}
+}
+
+void move(int n)
+{
+	if (protocol==0)	
+	{
+		proto.class.protocol=0;
+		proto.class.password=password;
+		proto.class.cliRequest=32;
+		proto.class.requestData = n;
+		sendto(sock,&proto,MAX,0,(struct sockaddr *)
+                	&servAddr,sizeof(servAddr));
+		//get GPS data as response?
+        	recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
+                	&fromAddr, &fromSize);
+		//write data?
+	}
+}
+
+void stop()
+{
+	if(protocol == 0)
+	{
 	}
 }
 
