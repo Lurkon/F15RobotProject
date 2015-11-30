@@ -6,7 +6,7 @@ int sock;
 int sockOpen = 0;
 struct sockaddr_in servAddr;
 
-int main(){
+/*int main(){
 	char* gps = getGPS();
     int size = *(int*)gps;
     gps += 4;
@@ -85,7 +85,7 @@ int main(){
         image++;
     }
     printf("\n");
-}
+}*/
 
 void openSocket(){
     //Create a socket for a TCP connection
@@ -116,6 +116,8 @@ char* getResponse(){
 
     char* beginning = strstr(buffer, "\r\n\r\n");
     *(int*) beginning = totalBytesReceived - (int)(beginning-buffer) - 4;
+
+    free(buffer);
 
     return beginning;
 }
