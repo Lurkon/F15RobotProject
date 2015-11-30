@@ -6,7 +6,7 @@ int sock;
 int sockOpen = 0;
 struct sockaddr_in servAddr;
 
-/*int main(){
+int main(){
 	char* gps = getGPS();
 
     while(*gps != EOF){
@@ -26,7 +26,7 @@ struct sockaddr_in servAddr;
         image++;
     }
     printf("\n");
-}*/
+}
 
 void openSocket(){
     //Create a socket for a TCP connection
@@ -154,7 +154,7 @@ char* move(int speed){
     servAddr.sin_port = htons(8082);
 
     //Set up the request string to the server
-    char* requestHolder = "GET /state?id=5winnow&lx=%d HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestHolder = "GET /twist?id=5winnow&lx=%d HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
     char* requestString = malloc(sizeof(char) * (strlen(requestHolder) + log10(speed)));
 
     sprintf(requestString, requestHolder, speed);
@@ -175,7 +175,7 @@ char* turn(int degrees){
     servAddr.sin_port = htons(8082);
 
     //Set up the request string to the server
-    char* requestHolder = "GET /state?id=5winnow&az=%d HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestHolder = "GET /twist?id=5winnow&az=%d HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
     char* requestString = malloc(sizeof(char) * (strlen(requestHolder) + log10(degrees)));
 
     sprintf(requestString, requestHolder, degrees);
@@ -196,7 +196,7 @@ char* stop(){
     servAddr.sin_port = htons(8082);
 
     //Set up the request string to the server
-    char* requestString = "GET /state?id=5winnow&lx=0 HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestString = "GET /twist?id=5winnow&lx=0 HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
 
     sendRequest(requestString);
     char* response = getResponse();
