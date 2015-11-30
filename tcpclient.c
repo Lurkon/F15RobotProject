@@ -14,12 +14,40 @@ int main(){
         gps++;
     }
     printf("\n");
-	//printf("%s\n", getdGPS());
-	//printf("%s\n", getLasers());
-	//printf("%s\n", move(4));
-	//printf("%s\n", turn(90));
-	//printf("%s\n", stop());
-	char* image = getImage();
+
+    char* dgps = getdGPS();
+
+    while(*dgps != EOF){
+        printf("%c", *dgps);
+        dgps++;
+    }
+    printf("\n");
+	
+    char* lasers = getLasers();
+
+    while(*lasers != EOF){
+        printf("%c", *lasers);
+        lasers++;
+    }
+    printf("\n");
+	
+    char* moves = move(5);
+
+    while(*moves != EOF){
+        printf("%c", *moves);
+        moves++;
+    }
+    printf("\n");
+
+    char* stops = stop();
+
+    while(*stops != EOF){
+        printf("%c", *stops);
+        stops++;
+    }
+    printf("\n");
+
+    char* image = getImage();
 
     while(*image != EOF){
         printf("%c", *image);
@@ -47,16 +75,12 @@ char* getResponse(){
     int msgCount = 1;
     int totalBytesReceived = 0;
     int bytesReceived;
-    int quit=0;
 
-    while(!quit && (bytesReceived = recv(sock, buffer + totalBytesReceived, RCVBUFSIZE, 0)) > 0)
+    while((bytesReceived = recv(sock, buffer + totalBytesReceived, RCVBUFSIZE, 0)) > 0)
     {
-        if (bytesReceived != RCVBUFSIZE)
-            quit=1;
    		totalBytesReceived += bytesReceived;
    		buffer = realloc(buffer, totalBytesReceived + RCVBUFSIZE);
     	msgCount++;
-    	printf("%d\n", totalBytesReceived);
     }
 
     buffer = realloc(buffer, totalBytesReceived + 1);
@@ -64,6 +88,8 @@ char* getResponse(){
 
     char* beginning = strstr(buffer, "\r\n\r\n");
     beginning += 4;
+
+    printf("%d\n", totalBytesReceived - ((int)(beginning-buffer)));
 
     return beginning;
 }
