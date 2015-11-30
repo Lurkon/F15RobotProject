@@ -47,13 +47,16 @@ char* getResponse(){
     int msgCount = 1;
     int totalBytesReceived = 0;
     int bytesReceived;
+    int quit=0;
 
-    while((bytesReceived = recv(sock, buffer + totalBytesReceived, RCVBUFSIZE, 0)) > 0)
-   	{
+    while(!quit && (bytesReceived = recv(sock, buffer + totalBytesReceived, RCVBUFSIZE, 0)) > 0)
+    {
+        if (bytesReceived != RCVBUFSIZE)
+            quit=1;
    		totalBytesReceived += bytesReceived;
    		buffer = realloc(buffer, totalBytesReceived + RCVBUFSIZE);
-        msgCount++;
-        printf("%d\n", totalBytesReceived);
+    	msgCount++;
+    	printf("%d\n", totalBytesReceived);
     }
 
     buffer = realloc(buffer, totalBytesReceived + 1);
