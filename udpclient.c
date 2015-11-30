@@ -258,6 +258,10 @@ void stop()
         proto.class.requestData = 0;
         sendto(sock,&proto,MAX,0,(struct sockaddr *)
                 &servAddr,sizeof(servAddr));
+        //get GPS data as response?
+        recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
+                &fromAddr, &fromSize);
+        //write data?
 }
 
 void turn(int n)
@@ -268,6 +272,10 @@ void turn(int n)
         proto.class.requestData = 14/n;
         sendto(sock,&proto,MAX,0,(struct sockaddr *)
                 &servAddr,sizeof(servAddr));
+        //get GPS data as response?
+        recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
+                &fromAddr, &fromSize);
+        //write data?
 }
 
 void getImage()
@@ -279,6 +287,11 @@ void getImage()
         sendto(sock,&proto,MAX,0,(struct sockaddr *)
                 &servAddr,sizeof(servAddr));
 	//RECEIEVE DATA
+        //get GPS data as response?
+        recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
+                &fromAddr, &fromSize);
+        //write data?
+
 }
 
 void getGPS()
@@ -291,6 +304,10 @@ void getGPS()
                 &servAddr,sizeof(servAddr));
 
 	//RECEIVE DATA
+        //get GPS data as response?
+        recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
+                &fromAddr, &fromSize);
+        //write data?
 }
 
 void getdGPS()
@@ -303,6 +320,10 @@ void getdGPS()
                 &servAddr,sizeof(servAddr));
 
 	//RECEIVE DATA
+        //get GPS data as response?
+        recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
+                &fromAddr, &fromSize);
+        //write data?
 }
 
 //cmdLine reads command line arguments into the proper variables.
