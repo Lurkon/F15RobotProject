@@ -136,6 +136,13 @@ int main (int argc, char **argv)
 		}
 		numSides--;
 		}
+		*index = 2;
+		index++;
+		*index = 0;
+		index++;
+		*index =1;
+		index++;
+		*index=0;
 	}
 	else
 	{
@@ -217,41 +224,85 @@ void draw(int n, int l)
 	int i;
 	for (i=0; i<n; i++)
 	{
-/*		getGPS();
-		getImage();*/
+		getGPS();
+		getImage();
 		move(l);
 		sleep(1);
-		stop();/*
+		stop();
 		getdGPS();
 		turn(n);
 		sleep(1);
 		stop();
-*/
 	}
 }
 
 void move(int n)
 {
-	if (protocol==0)	
-	{
-		proto.class.protocol=0;
-		proto.class.password=password;
-		proto.class.cliRequest=32;
-		proto.class.requestData = n;
-		sendto(sock,&proto,MAX,0,(struct sockaddr *)
-                	&servAddr,sizeof(servAddr));
-		//get GPS data as response?
-        	recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
-                	&fromAddr, &fromSize);
-		//write data?
-	}
+	proto.class.protocol=0;
+	proto.class.password=password;
+	proto.class.cliRequest=32;
+	proto.class.requestData = n;
+	sendto(sock,&proto,MAX,0,(struct sockaddr *)
+           	&servAddr,sizeof(servAddr));
+	//get GPS data as response?
+       	recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
+               	&fromAddr, &fromSize);
+	//write data?
 }
 
 void stop()
 {
-	if(protocol == 0)
-	{
-	}
+        proto.class.protocol=0;
+        proto.class.password=password;
+        proto.class.cliRequest=128;
+        proto.class.requestData = 0;
+        sendto(sock,&proto,MAX,0,(struct sockaddr *)
+                &servAddr,sizeof(servAddr));
+}
+
+void turn(int n)
+{
+        proto.class.protocol=0;
+        proto.class.password=password;
+        proto.class.cliRequest=64;
+        proto.class.requestData = 14/n;
+        sendto(sock,&proto,MAX,0,(struct sockaddr *)
+                &servAddr,sizeof(servAddr));
+}
+
+void getImage()
+{
+        proto.class.protocol=0;
+        proto.class.password=password;
+        proto.class.cliRequest=64;  
+        proto.class.requestData = 14/n;
+        sendto(sock,&proto,MAX,0,(struct sockaddr *)
+                &servAddr,sizeof(servAddr));
+	//RECEIEVE DATA
+}
+
+void getGPS()
+{
+        proto.class.protocol=0;
+        proto.class.password=password;
+        proto.class.cliRequest=64;  
+        proto.class.requestData = 14/n;
+        sendto(sock,&proto,MAX,0,(struct sockaddr *)
+                &servAddr,sizeof(servAddr));
+
+	//RECEIVE DATA
+}
+
+void getdGPS()
+{
+        proto.class.protocol=0;
+        proto.class.password=password;
+        proto.class.cliRequest=8;  
+        proto.class.requestData = 0;
+        sendto(sock,&proto,MAX,0,(struct sockaddr *)
+                &servAddr,sizeof(servAddr));
+
+	//RECEIVE DATA
 }
 
 //cmdLine reads command line arguments into the proper variables.
