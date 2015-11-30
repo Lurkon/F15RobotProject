@@ -1,5 +1,11 @@
 #include "tcpclient.h"
 
+char* servIP = "169.55.155.236";
+char* robotID = "robot_9";
+int sock;
+int sockOpen = 0;
+struct sockaddr_in servAddr;
+
 /*int main(){
 	char* gps = getGPS();
 
