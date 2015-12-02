@@ -21,7 +21,7 @@ using namespace std;
 //struct nineProtocol *ourProto;
 unsigned int myPass;
 int servSock, servPort;
-sockaddr_in clntAddr;
+sockaddr_in servAddr;
 bool quit=0;
 
 void sendData(char *data, unsigned int *buffer)
@@ -43,13 +43,16 @@ void sendData(char *data, unsigned int *buffer)
       for (i=start;i<j*buff_size;i++)
       {
          if (i<size)
-            *(char *) (buffer+i-start)=data[i];
+         {
+            *(char *) ((char *)buffer+i-start+HEADSIZE)=data[i];
+         }
       }
       buffer[6]=i-j*buff_size;
       
-      if (sendto(servSock, buffer, BUFSIZE, 0, 
-         (struct sockaddr *) &clntAddr, sizeof(clntAddr)) != BUFSIZE)
+      if ((int) sendto(servSock, buffer, BUFSIZE, 0, 
+      (struct sockaddr *) &servAddr, sizeof(servAddr)) != BUFSIZE)
       {
+         perror("Send failed\n");
          cerr << "send sent a different number of bytes x\n";
          close(servSock);
          exit(1);
@@ -81,7 +84,6 @@ void interpret1(unsigned int *buffer)
          case 4:
             cout << "GPS\n";
             sendData(getGPS(), buffer);
-            cout << "done GPS\n";
             break;
          case 8:
             sendData(getdGPS(), buffer);
@@ -159,7 +161,7 @@ void interpret2(unsigned char command, unsigned char data, unsigned int *buffer)
 int main(int argc, char *argv[])
 {
    srand(time(NULL));
-   int servSock, servPort, robotNum;
+   int robotNum;
    unsigned int clntLen;
    struct sockaddr_in servAddr;
    char *servIP, *robotID;
@@ -259,7 +261,6 @@ int main(int argc, char *argv[])
    memset(&servAddr,0,sizeof(servAddr));
    servAddr.sin_family=AF_INET;
    servAddr.sin_addr.s_addr=htonl(INADDR_ANY);
-   cout << servPort << endl;
    servAddr.sin_port=htons(servPort);
    
    if (bind(servSock,(struct sockaddr *) &servAddr,sizeof(servAddr))<0)
@@ -273,9 +274,9 @@ int main(int argc, char *argv[])
       cout << "New Client\n";
       unsigned int buffer[BUFSIZE/sizeof(unsigned int)], recvSize;
       bool is_class;
-      clntLen=sizeof(clntAddr);
+      clntLen=sizeof(servAddr);
 
-      if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &clntAddr, &clntLen))<0)
+      if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &servAddr, &clntLen))<0)
       {
          cerr << "recv() failed 1\n";
          close(servSock);
@@ -290,7 +291,7 @@ int main(int argc, char *argv[])
       interpret1(buffer); //updates buffer with the password
 
       if (sendto(servSock, buffer, BUFSIZE, 0, 
-      (struct sockaddr *) &clntAddr, sizeof(clntAddr)) != BUFSIZE)
+      (struct sockaddr *) &servAddr, sizeof(servAddr)) != BUFSIZE)
       {
          cerr << "send sent a different number of bytes z\n";
          close(servSock);
@@ -301,7 +302,7 @@ int main(int argc, char *argv[])
       {
          while (!quit)
          {
-            if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &clntAddr, &clntLen))<0)
+            if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &servAddr, &clntLen))<0)
             {
                cerr << "recv() failed 1\n";
                close(servSock);
@@ -315,7 +316,7 @@ int main(int argc, char *argv[])
       
       else
       {
-         if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &clntAddr, &clntLen))<0)
+         if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &servAddr, &clntLen))<0)
          {
             cerr << "recv() failed\n";
             close(servSock);
@@ -339,6 +340,6 @@ int main(int argc, char *argv[])
          }
       }
       quit=0;
-      close(servSock);
+      //close(servSock);
    }
 }
