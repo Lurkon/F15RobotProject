@@ -24,7 +24,7 @@ int servSock, servPort;
 sockaddr_in clntAddr;
 bool quit=0;
 
-void sendData(char *data, unsigned int buffer[300])
+void sendData(char *data, unsigned int *buffer)
 {
    int size=(int) data[0]; //total data to send
    data+=4;
@@ -36,13 +36,14 @@ void sendData(char *data, unsigned int buffer[300])
       send++;
    buffer[5]=send;
    
-   for (int j=0;j<send;j++)
+   for (int j=1;j<=send;j++)
    {
-      buffer[4]=j+1;
+      buffer[4]=j;
       int i;
       for (i=start;i<j*buff_size;i++)
       {
-         buffer[i-start]=data[i];
+         if (i<size)
+            *(char *) (buffer+i-start)=data[i];
       }
       buffer[6]=i-j*buff_size;
       
@@ -270,7 +271,7 @@ int main(int argc, char *argv[])
    while (1)
    {
       cout << "New Client\n";
-      unsigned int buffer[BUFSIZE], recvSize;
+      unsigned int buffer[BUFSIZE/sizeof(unsigned int)], recvSize;
       bool is_class;
       clntLen=sizeof(clntAddr);
 
