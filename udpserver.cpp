@@ -36,13 +36,14 @@ void sendData(char *data, unsigned int buffer[300])
       send++;
    buffer[5]=send;
    
-   for (int j=0;j<send;j++)
+   for (int j=1;j<=send;j++)
    {
-      buffer[4]=j+1;
+      buffer[4]=j;
       int i;
       for (i=start;i<j*buff_size;i++)
       {
-         buffer[i-start]=data[i];
+         if(i<size)
+            buffer[i-start]=data[i];
       }
       buffer[6]=i-j*buff_size;
       
