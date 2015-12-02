@@ -4,7 +4,7 @@ int sock;
 int sockOpen = 0;
 struct sockaddr_in servAddr;
 
-./*int main(){
+/*int main(){
     servIP = "169.55.155.236";
     robotID = "5winnow";
     robotNum = 9;
