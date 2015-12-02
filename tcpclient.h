@@ -22,9 +22,13 @@ char* getGPS();
 char* getdGPS();
 char* getLasers();
 char* move(int speed);
-char* turn(int degrees);
+char* turn(float degrees);
 char* stop();
 void DieWithError(char* errorMessage);
+
+static char* servIP;
+static char* robotID;
+static int robotNum;
 
 #ifdef __cplusplus
 }

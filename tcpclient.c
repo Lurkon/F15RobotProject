@@ -1,12 +1,15 @@
 #include "tcpclient.h"
 
-char* servIP = "169.55.155.236";
-char* robotID = "robot_9";
 int sock;
 int sockOpen = 0;
 struct sockaddr_in servAddr;
 
-/*int main(){
+./*int main(){
+    servIP = "169.55.155.236";
+    robotID = "5winnow";
+    robotNum = 9;
+
+
 	char* gps = getGPS();
     int size = *(int*)gps;
     gps += 4;
@@ -41,7 +44,7 @@ struct sockaddr_in servAddr;
     printf("\n");
 
 
-    char* turns = turn(30);
+    char* turns = turn(30.5);
     size = *(int*)turns;
     turns += 4;
 
@@ -141,11 +144,15 @@ char* getImage(){
     servAddr.sin_port = htons(8081);
 
     //Set up the request string to the server
-    char* requestString = "GET /snapshot?topic=/robot_9/image?width=600?height=500 HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestHolder = "GET /snapshot?topic=/robot_%d/image?width=600?height=500 HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestString = malloc(strlen(requestHolder) + sizeof(int));
+
+    sprintf(requestString, requestHolder, robotNum);
 
     sendRequest(requestString);
     char* response = getResponse();
 
+    free(requestString);
     close(sock);
 
 	return response;
@@ -158,10 +165,15 @@ char* getGPS(){
     servAddr.sin_port = htons(8082);
 
     //Set up the request string to the server
-    char* requestString = "GET /state?id=5winnow HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestHolder = "GET /state?id=%s HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestString = malloc(strlen(requestHolder) + strlen(robotID));
+
+    sprintf(requestString, requestHolder, robotID);
 
     sendRequest(requestString);
     char* response = getResponse();
+
+    free(requestString);
     close(sock);
 
 	return response;
@@ -174,11 +186,16 @@ char* getdGPS(){
     servAddr.sin_port = htons(8084);
 
     //Set up the request string to the server
-    char* requestString = "GET /state?id=5winnow HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestHolder = "GET /state?id=%s HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestString = malloc(strlen(requestHolder) + strlen(robotID));
+
+    sprintf(requestString, requestHolder, robotID);
+
 
     sendRequest(requestString);
     char* response = getResponse();
 
+    free(requestString);
     close(sock);
 
 	return response;
@@ -191,11 +208,15 @@ char* getLasers(){
     servAddr.sin_port = htons(8083);
 
     //Set up the request string to the server
-    char* requestString = "GET /state?id=5winnow HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestHolder = "GET /state?id=%s HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestString = malloc(strlen(requestHolder) + strlen(robotID));
+
+    sprintf(requestString, requestHolder, robotID);
 
     sendRequest(requestString);
     char* response = getResponse();
     
+    free(requestString);
     close(sock);
 
 	return response;
@@ -208,10 +229,10 @@ char* move(int speed){
     servAddr.sin_port = htons(8082);
 
     //Set up the request string to the server
-    char* requestHolder = "GET /twist?id=5winnow&lx=%d HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
-    char* requestString = malloc(sizeof(char) * (strlen(requestHolder) + log10(speed)));
+    char* requestHolder = "GET /twist?id=%s&lx=%d HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestString = malloc(sizeof(char) * (strlen(robotID) + strlen(requestHolder) + log10(speed)));
 
-    sprintf(requestString, requestHolder, speed);
+    sprintf(requestString, requestHolder, robotID, speed);
 
     sendRequest(requestString);
     char* response = getResponse();
@@ -222,17 +243,17 @@ char* move(int speed){
 	return response;
 }
 
-char* turn(int degrees){
+char* turn(float degrees){
 	openSocket();
 
 	//Set server port
     servAddr.sin_port = htons(8082);
 
     //Set up the request string to the server
-    char* requestHolder = "GET /twist?id=5winnow&az=%d HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
-    char* requestString = malloc(sizeof(char) * (strlen(requestHolder) + log10(degrees)));
+    char* requestHolder = "GET /twist?id=%s&az=%f HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestString = malloc(sizeof(char) * (strlen(robotID) + strlen(requestHolder) + log10(degrees)));
 
-    sprintf(requestString, requestHolder, degrees);
+    sprintf(requestString, requestHolder, robotID, degrees);
 
     sendRequest(requestString);
     char* response = getResponse();
@@ -250,11 +271,15 @@ char* stop(){
     servAddr.sin_port = htons(8082);
 
     //Set up the request string to the server
-    char* requestString = "GET /twist?id=5winnow&lx=0 HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestHolder = "GET /twist?id=%s&lx=0 HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestString = malloc(strlen(requestHolder) + strlen(robotID));
+
+    sprintf(requestString, requestHolder, robotID);
 
     sendRequest(requestString);
     char* response = getResponse();
     
+    free(requestString);
     close(sock);
 
 	return response;
