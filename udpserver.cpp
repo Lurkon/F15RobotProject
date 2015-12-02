@@ -28,7 +28,7 @@ void sendData(char *data, unsigned int buffer[300])
 {
    int size=(int) data[0]; //total data to send
    data+=4;
-   //cout << "size: " << size << endl;
+   cout << "size: " << size << endl;
    int buff_size=BUFSIZE-HEADSIZE;
    int send=size/buff_size;
    int start=0;
@@ -49,7 +49,7 @@ void sendData(char *data, unsigned int buffer[300])
       if (sendto(servSock, buffer, BUFSIZE, 0, 
          (struct sockaddr *) &clntAddr, sizeof(clntAddr)) != BUFSIZE)
       {
-         cerr << "send sent a different number of bytes\n";
+         cerr << "send sent a different number of bytes x\n";
          close(servSock);
          exit(1);
       }
@@ -71,7 +71,7 @@ void interpret1(unsigned int *buffer)
    
    else if (buffer[1]==myPass)
    {
-      cout << "buffer: " << buffer[2] << endl;
+      cout << "request: " << buffer[2] << endl;
       switch (buffer[2])
       {
          case 2:
@@ -80,6 +80,7 @@ void interpret1(unsigned int *buffer)
          case 4:
             cout << "GPS\n";
             sendData(getGPS(), buffer);
+            cout << "done GPS\n";
             break;
          case 8:
             sendData(getdGPS(), buffer);
@@ -154,8 +155,33 @@ void interpret2(unsigned char command, unsigned char data, unsigned int *buffer)
    }
 }
 
-void commands(char **argv)
+int main(int argc, char *argv[])
 {
+   srand(time(NULL));
+   int servSock, servPort, robotNum;
+   unsigned int clntLen;
+   struct sockaddr_in servAddr;
+   char *servIP, robotID;
+   int robotNum;
+   
+   //port
+   if (strcmp(argv[1],"-p")==0)
+   {
+      servPort=atoi(argv[2]);
+   }
+   else if (strcmp(argv[3],"-p")==0)
+   {
+      servPort=atoi(argv[4]);
+   }
+   else if (strcmp(argv[5],"-p")==0)
+   {
+      servPort=atoi(argv[6]);
+   }
+   else if (strcmp(argv[7],"-p")==0)
+   {
+      servPort=atoi(argv[8]);
+   }
+   
    //IP
    if (strcmp(argv[1],"-h")==0)
    {
@@ -207,37 +233,15 @@ void commands(char **argv)
    {
       robotNum=atoi(argv[8]);
    }
-   //port
-   if (strcmp(argv[1],"-p")==0)
-   {
-      servPort=atoi(argv[2]);
-   }
-   else if (strcmp(argv[3],"-p")==0)
-   {
-      servPort=atoi(argv[4]);
-   }
-   else if (strcmp(argv[5],"-p")==0)
-   {
-      servPort=atoi(argv[6]);
-   }
-   else if (strcmp(argv[7],"-p")==0)
-   {
-      servPort=atoi(argv[8]);
-   }
-}
-
-int main(int argc, char *argv[])
-{
-   srand(time(NULL));
-   int servSock, servPort, robotNum;
-   unsigned int clntLen;
-   struct sockaddr_in servAddr;
-   if (argc!=9)
+   
+   setVar(char *servIP, char *robotID, int robotNum)
+   
+   if (argc<9)
    {
       cerr << "./server -h <hostname-of-robot> -i <robot-id> -n <robot-number> -p <port>" << endl;
       exit(1);
    }
-   commands(argv);
+   //commands(argv);
 
    myPass=rand();
    if ((servSock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
@@ -255,6 +259,7 @@ int main(int argc, char *argv[])
    memset(&servAddr,0,sizeof(servAddr));
    servAddr.sin_family=AF_INET;
    servAddr.sin_addr.s_addr=htonl(INADDR_ANY);
+   cout << servPort << endl;
    servAddr.sin_port=htons(servPort);
    
    if (bind(servSock,(struct sockaddr *) &servAddr,sizeof(servAddr))<0)
@@ -269,7 +274,7 @@ int main(int argc, char *argv[])
       unsigned int buffer[BUFSIZE], recvSize;
       bool is_class;
       clntLen=sizeof(clntAddr);
-      
+
       if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &clntAddr, &clntLen))<0)
       {
          cerr << "recv() failed 1\n";
@@ -283,11 +288,11 @@ int main(int argc, char *argv[])
          is_class=0;
          
       interpret1(buffer); //updates buffer with the password
-      
+
       if (sendto(servSock, buffer, BUFSIZE, 0, 
       (struct sockaddr *) &clntAddr, sizeof(clntAddr)) != BUFSIZE)
       {
-         cerr << "send sent a different number of bytes\n";
+         cerr << "send sent a different number of bytes z\n";
          close(servSock);
          exit(1);
       }
