@@ -127,11 +127,11 @@ int main (int argc, char **argv)
 			index++;
 			*index=64;//turn
 			index++;
-			*index=14/numSides;
+			*index=1000*(14/5)/numSides;
 			index++;
 			*index=128;//stop
 			index++;
-			*index=1;
+			*index=5;
 			index++;
 			*index=8;//dgps
 			index++;
@@ -227,14 +227,14 @@ void draw(int n, int l)
 	int i;
 	for (i=0; i<n; i++)
 	{
-		//getGPS();
-		//getImage();
+		getGPS();
+		getImage();
 		move(l);
 		sleep(1);
 		stop();
-		//getdGPS();
+		getdGPS();
 		turn(n);
-		sleep(1);
+		sleep(5);
 		stop();
 	}
 }
@@ -278,7 +278,7 @@ void turn(int n)
         proto.class.protocol=0;
         proto.class.password=password;
         proto.class.cliRequest=64;
-        proto.class.requestData = (1000* 14)/n;
+        proto.class.requestData = (200* 14)/n;
         proto.class.totalSize=0;
         proto.class.payloadSize=0;
         proto.class.offset=0;
