@@ -1,5 +1,8 @@
 #include "tcpclient.h"
 
+char* servIP;
+char* robotID;
+int robotNum;
 int sock;
 int sockOpen = 0;
 struct sockaddr_in servAddr;
@@ -89,6 +92,12 @@ struct sockaddr_in servAddr;
     }
     printf("\n");
 }*/
+
+void setVar(char* serv, char* robot, int robNum){
+    servIP = serv;
+    robotID = robot;
+    robotNum = robNum;
+}
 
 void openSocket(){
     //Create a socket for a TCP connection
