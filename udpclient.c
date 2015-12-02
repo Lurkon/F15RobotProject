@@ -387,6 +387,7 @@ void writeGPS() {
 	data = fopen("gpsdata.txt","a");
 	fwrite(start, 1, sum, data);
 	free(start);
+	fclose(data);
 	}
 	else
 	{
@@ -424,9 +425,10 @@ void writeImage()
                         }
                 }
 	sprintf(name, "picture%d.jpg",written);
-        data = fopen(name,"w");
-        fwrite(start, 1, sum, data);
+        image = fopen(name,"w");
+        fwrite(start, 1, sum, image);
         free(start);
+	fclose(image);
         }
         else
         {
