@@ -35,7 +35,6 @@ int connectNine();
 int connectClass();
 void disconnectClass();
 void draw();
-void writeData();
 void writeImage();
 
 //buffer size
@@ -306,6 +305,8 @@ void getImage()
         recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
                 &fromAddr, &fromSize);
         //write data?
+	if(proto.class.totalSize!=0)
+		writeImage();
 
 }
 
@@ -388,6 +389,47 @@ void writeGPS() {
 	{
 		//write for group protocol
 	}
+}
+
+void writeImage()
+{
+        char *start;
+        char *index;
+        int i;
+        int sum=0;
+	char *name = 0;
+
+        if (protocol == 0)
+        {
+                start = malloc(proto.class.totalSize);
+                index = start;
+                for (i=0; i<proto.class.payloadSize; i++)
+                {
+                        *index = proto.class.payload[i];
+                        index++;
+                }
+                sum = proto.class.payloadSize;
+                while(sum<proto.class.totalSize)
+                {
+                        recvfrom(sock, &proto, MAX, 0, (struct
+                                sockaddr *) &fromAddr, &fromSize);
+                        sum += proto.class.payloadSize;
+                        for (i = 0; i<proto.class.payloadSize; i++)
+                        {
+                                *index = proto.class.payload[i];
+                                index++;
+                        }
+                }
+	sprintf(name, "picture%d.jpg",written);
+        data = fopen(name,"w");
+        fwrite(start, 1, sum, data);
+        free(start);
+        }
+        else
+        {
+                //write for group protocol
+        }
+
 }
 
 //cmdLine reads command line arguments into the proper variables.
