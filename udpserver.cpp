@@ -21,7 +21,7 @@ using namespace std;
 //struct nineProtocol *ourProto;
 unsigned int myPass;
 int servSock, servPort;
-sockaddr_in servAddr;
+sockaddr_in servAddr, cliAddr;
 bool quit=0;
 
 void sendData(char *data, unsigned int *buffer)
@@ -47,10 +47,24 @@ void sendData(char *data, unsigned int *buffer)
             *(char *) ((char *)buffer+i-start+HEADSIZE)=data[i];
          }
       }
-      buffer[6]=i-j*buff_size;
+      
+      if (i>size)
+         buffer[6]=i-size;
+      else
+         buffer[6]=buff_size;
+         
+      cout << buffer[6] << endl;
+      
+      if (buffer[2]==4)
+      {
+      for (i=0;i<BUFSIZE;i++)
+      {
+         cout << (int) ((char *)buffer)[i] << endl;
+      }
+      }
       
       if ((int) sendto(servSock, buffer, BUFSIZE, 0, 
-      (struct sockaddr *) &servAddr, sizeof(servAddr)) != BUFSIZE)
+      (struct sockaddr *) &cliAddr, sizeof(cliAddr)) != BUFSIZE)
       {
          perror("Send failed\n");
          cerr << "send sent a different number of bytes x\n";
@@ -163,7 +177,7 @@ int main(int argc, char *argv[])
    srand(time(NULL));
    int robotNum;
    unsigned int clntLen;
-   struct sockaddr_in servAddr;
+   //struct sockaddr_in servAddr;
    char *servIP, *robotID;
    
    //port
@@ -274,9 +288,9 @@ int main(int argc, char *argv[])
       cout << "New Client\n";
       unsigned int buffer[BUFSIZE/sizeof(unsigned int)], recvSize;
       bool is_class;
-      clntLen=sizeof(servAddr);
+      clntLen=sizeof(cliAddr);
 
-      if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &servAddr, &clntLen))<0)
+      if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &cliAddr, &clntLen)<0))
       {
          cerr << "recv() failed 1\n";
          close(servSock);
@@ -291,7 +305,7 @@ int main(int argc, char *argv[])
       interpret1(buffer); //updates buffer with the password
 
       if (sendto(servSock, buffer, BUFSIZE, 0, 
-      (struct sockaddr *) &servAddr, sizeof(servAddr)) != BUFSIZE)
+      (struct sockaddr *) &cliAddr, sizeof(cliAddr)) != BUFSIZE)
       {
          cerr << "send sent a different number of bytes z\n";
          close(servSock);
@@ -302,7 +316,7 @@ int main(int argc, char *argv[])
       {
          while (!quit)
          {
-            if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &servAddr, &clntLen))<0)
+            if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &cliAddr, &clntLen))<0)
             {
                cerr << "recv() failed 1\n";
                close(servSock);
@@ -316,7 +330,7 @@ int main(int argc, char *argv[])
       
       else
       {
-         if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &servAddr, &clntLen))<0)
+         if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &cliAddr, &clntLen))<0)
          {
             cerr << "recv() failed\n";
             close(servSock);
