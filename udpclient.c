@@ -48,8 +48,8 @@ union Protocol proto;
 
 //Files written
 int written = 0;
-FILE image;
-FILE data;
+FILE *image;
+FILE *data;
 
 //socket data
 int sock;
@@ -104,7 +104,7 @@ int main (int argc, char **argv)
 		//good connection
 		proto.nine.protocol = 9;
 		proto.nine.password = password;
-		char *index = proto.nine.payload;
+		char *index = (char *)proto.nine.payload;
 		for (j=0; j<2; j++)
 		{
 		for (i=0; i<numSides; i++)
@@ -365,7 +365,7 @@ void writeGPS() {
 		index = start;
 		for (i=0; i<proto.class.payloadSize; i++)
 		{
-			index = proto.class.payload[i];
+			*index = proto.class.payload[i];
 			index++;
 		}
 		sum = proto.class.payloadSize;
@@ -376,7 +376,7 @@ void writeGPS() {
 			sum += proto.class.payloadSize;
 			for (i = 0; i<proto.class.payloadSize; i++)
 			{
-				index = proto.class.payload[i];
+				*index = proto.class.payload[i];
 				index++;
 			}
 		}
