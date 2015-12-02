@@ -35,7 +35,6 @@ int connectNine();
 int connectClass();
 void disconnectClass();
 void draw();
-void writeData();
 void writeImage();
 
 //buffer size
@@ -306,6 +305,8 @@ void getImage()
         recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
                 &fromAddr, &fromSize);
         //write data?
+	if(proto.class.totalSize!=0)
+		writeImage();
 
 }
 
