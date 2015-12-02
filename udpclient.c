@@ -179,6 +179,9 @@ int connectClass()
 	if(proto.class.protocol != 0)
 		return -1;
 	password = proto.class.password;
+	if(sendto(sock,&proto,MAX,0,(struct sockaddr *)
+		&servAddr,sizeof(servAddr))!=MAX)
+		return -1;
 	if(proto.class.cliRequest ==0)
 		return 0;
 	return -1;
