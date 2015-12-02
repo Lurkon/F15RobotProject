@@ -161,8 +161,7 @@ int main(int argc, char *argv[])
    int servSock, servPort, robotNum;
    unsigned int clntLen;
    struct sockaddr_in servAddr;
-   char *servIP, robotID;
-   int robotNum;
+   char *servIP, *robotID;
    
    //port
    if (strcmp(argv[1],"-p")==0)
@@ -234,7 +233,7 @@ int main(int argc, char *argv[])
       robotNum=atoi(argv[8]);
    }
    
-   setVar(char *servIP, char *robotID, int robotNum)
+   setVar(servIP, robotID, robotNum);
    
    if (argc<9)
    {
