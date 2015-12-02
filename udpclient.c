@@ -24,6 +24,7 @@ char *getResponse();
 void getImage();
 void getGPS();
 void getdGPS();
+void writeGPS();
 void getLasers();
 void move(int speed);
 void turn(int degrees);
@@ -47,8 +48,8 @@ union Protocol proto;
 
 //Files written
 int written = 0;
-FILE image;
-FILE data;
+FILE *image;
+FILE *data;
 
 //socket data
 int sock;
@@ -90,6 +91,9 @@ int main (int argc, char **argv)
 		return 0;
 	}
 
+	//start the data file
+	data=fopen("gpsdata.txt", "w+");
+	fclose(data);
 
 	//This is now actual connection things
 	openSocket(&serverName, servPort);
@@ -100,7 +104,7 @@ int main (int argc, char **argv)
 		//good connection
 		proto.nine.protocol = 9;
 		proto.nine.password = password;
-		char *index = proto.nine.payload;
+		char *index = (char *)proto.nine.payload;
 		for (j=0; j<2; j++)
 		{
 		for (i=0; i<numSides; i++)
@@ -149,7 +153,6 @@ int main (int argc, char **argv)
 		protocol=0;
 		if(connectClass()!=0)
 			DieWithError("Could not connect!\n");
-printf("pass: %d\n",password);
 		draw (numSides, sideLength);
 		draw (numSides-1, sideLength);
 		disconnectClass();
@@ -242,6 +245,9 @@ void move(int n)
 	proto.class.password=password;
 	proto.class.cliRequest=32;
 	proto.class.requestData = n;
+        proto.class.totalSize=0;
+        proto.class.payloadSize=0;
+        proto.class.offset=0;
 	sendto(sock,&proto,MAX,0,(struct sockaddr *)
            	&servAddr,sizeof(servAddr));
 	//get GPS data as response?
@@ -256,6 +262,9 @@ void stop()
         proto.class.password=password;
         proto.class.cliRequest=128;
         proto.class.requestData = 0;
+        proto.class.totalSize=0;
+        proto.class.payloadSize=0;
+        proto.class.offset=0;
         sendto(sock,&proto,MAX,0,(struct sockaddr *)
                 &servAddr,sizeof(servAddr));
         //get GPS data as response?
@@ -269,7 +278,10 @@ void turn(int n)
         proto.class.protocol=0;
         proto.class.password=password;
         proto.class.cliRequest=64;
-        proto.class.requestData = 14/n;
+        proto.class.requestData = (1000* 14)/n;
+        proto.class.totalSize=0;
+        proto.class.payloadSize=0;
+        proto.class.offset=0;
         sendto(sock,&proto,MAX,0,(struct sockaddr *)
                 &servAddr,sizeof(servAddr));
         //get GPS data as response?
@@ -284,6 +296,9 @@ void getImage()
         proto.class.password=password;
         proto.class.cliRequest=2;  
         proto.class.requestData = 0;
+        proto.class.totalSize=0;
+        proto.class.payloadSize=0;
+        proto.class.offset=0;
         sendto(sock,&proto,MAX,0,(struct sockaddr *)
                 &servAddr,sizeof(servAddr));
 	//RECEIEVE DATA
@@ -300,6 +315,9 @@ void getGPS()
         proto.class.password=password;
         proto.class.cliRequest=4;  
         proto.class.requestData = 0;
+	proto.class.totalSize=0;
+	proto.class.payloadSize=0;
+	proto.class.offset=0;
         sendto(sock,&proto,MAX,0,(struct sockaddr *)
                 &servAddr,sizeof(servAddr));
 
@@ -307,7 +325,9 @@ void getGPS()
         //get GPS data as response?
         recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
                 &fromAddr, &fromSize);
-        //write data?
+	//write GPS
+	if (proto.class.totalSize!=0)
+		writeGPS();
 }
 
 void getdGPS()
@@ -316,6 +336,9 @@ void getdGPS()
         proto.class.password=password;
         proto.class.cliRequest=8;  
         proto.class.requestData = 0;
+        proto.class.totalSize=0;
+        proto.class.payloadSize=0;
+        proto.class.offset=0;
         sendto(sock,&proto,MAX,0,(struct sockaddr *)
                 &servAddr,sizeof(servAddr));
 
@@ -323,7 +346,48 @@ void getdGPS()
         //get GPS data as response?
         recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
                 &fromAddr, &fromSize);
-        //write data?
+        //write data
+	if(proto.class.totalSize!=0)
+	{
+		writeGPS();
+	}
+}
+
+void writeGPS() {
+	char *start;
+	char *index;
+	int i;
+	int sum=0;
+
+	if (protocol == 0)
+	{
+		start = malloc(proto.class.totalSize);
+		index = start;
+		for (i=0; i<proto.class.payloadSize; i++)
+		{
+			*index = proto.class.payload[i];
+			index++;
+		}
+		sum = proto.class.payloadSize;
+		while(sum<proto.class.totalSize) 
+		{
+		        recvfrom(sock, &proto, MAX, 0, (struct 
+				sockaddr *) &fromAddr, &fromSize);
+			sum += proto.class.payloadSize;
+			for (i = 0; i<proto.class.payloadSize; i++)
+			{
+				*index = proto.class.payload[i];
+				index++;
+			}
+		}
+	data = fopen("gpsdata.txt","a");
+	fwrite(start, 1, sum, data);
+	free(start);
+	}
+	else
+	{
+		//write for group protocol
+	}
 }
 
 //cmdLine reads command line arguments into the proper variables.

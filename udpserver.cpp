@@ -20,11 +20,11 @@ using namespace std;
 //struct classProtocol *claProto;
 //struct nineProtocol *ourProto;
 unsigned int myPass;
-int servSock;
+int servSock, servPort;
 sockaddr_in clntAddr;
 bool quit=0;
 
-void sendData(char *data, unsigned int *buffer)
+void sendData(char *data, unsigned int buffer[300])
 {
    int size=(int) data[0]; //total data to send
    data+=4;
@@ -89,10 +89,10 @@ void interpret1(unsigned int *buffer)
             break;
          case 32:
             cout << "MOVE BITCH\n";
-            sendData(move(buffer[3]), buffer);
+            sendData(move((float) buffer[3]/1000.0), buffer);
             break;
          case 64:
-            sendData(turn(buffer[3]), buffer);
+            sendData(turn((float) buffer[3]/1000.0), buffer);
             break;
          case 128:
             sleep(buffer[3]);
@@ -154,14 +154,91 @@ void interpret2(unsigned char command, unsigned char data, unsigned int *buffer)
    }
 }
 
+void commands(char **argv)
+{
+   //IP
+   if (strcmp(argv[1],"-h")==0)
+   {
+      servIP=argv[2];
+   }
+   else if (strcmp(argv[3],"-h")==0)
+   {
+      servIP=argv[4];
+   }
+   else if (strcmp(argv[5],"-h")==0)
+   {
+      servIP=argv[6];
+   }
+   else if (strcmp(argv[7],"-h")==0)
+   {
+      servIP=argv[8];
+   }
+   //robotID
+   if (strcmp(argv[1],"-i")==0)
+   {
+      robotID=argv[2];
+   }
+   else if (strcmp(argv[3],"-i")==0)
+   {
+      robotID=argv[4];
+   }
+   else if (strcmp(argv[5],"-i")==0)
+   {
+      robotID=argv[6];
+   }
+   else if (strcmp(argv[7],"-i")==0)
+   {
+      robotID=argv[8];
+   }
+   //robotNum
+   if (strcmp(argv[1],"-n")==0)
+   {
+      robotNum=atoi(argv[2]);
+   }
+   else if (strcmp(argv[3],"-n")==0)
+   {
+      robotNum=atoi(argv[4]);
+   }
+   else if (strcmp(argv[5],"-n")==0)
+   {
+      robotNum=atoi(argv[6]);
+   }
+   else if (strcmp(argv[7],"-n")==0)
+   {
+      robotNum=atoi(argv[8]);
+   }
+   //port
+   if (strcmp(argv[1],"-p")==0)
+   {
+      servPort=atoi(argv[2]);
+   }
+   else if (strcmp(argv[3],"-p")==0)
+   {
+      servPort=atoi(argv[4]);
+   }
+   else if (strcmp(argv[5],"-p")==0)
+   {
+      servPort=atoi(argv[6]);
+   }
+   else if (strcmp(argv[7],"-p")==0)
+   {
+      servPort=atoi(argv[8]);
+   }
+}
+
 int main(int argc, char *argv[])
 {
    srand(time(NULL));
    int servSock, servPort, robotNum;
    unsigned int clntLen;
    struct sockaddr_in servAddr;
+   if (argc!=9)
+   {
+      cerr << "./server -h <hostname-of-robot> -i <robot-id> -n <robot-number> -p <port>" << endl;
+      exit(1);
+   }
+   commands(argv);
 
-   servPort=8080; //fill from -p
    myPass=rand();
    if ((servSock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
    {
