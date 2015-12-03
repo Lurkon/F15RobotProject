@@ -67,7 +67,7 @@ void sendData(char *data, unsigned int *buffer)
          close(servSock);
          exit(1);
       }
-      cout << "offset: " << buffer[4] << " total: " << buffer[5] << " payload: " << buffer[6] << endl;
+      //cout << "offset: " << buffer[4] << " total: " << buffer[5] << " payload: " << buffer[6] << endl;
       start+=BUFSIZE-HEADSIZE;
    }
    //free(data);
@@ -81,7 +81,7 @@ void interpret1(unsigned int *buffer)
    if (buffer[1]==0 && buffer[2]==0)
    {
       buffer[1]=myPass;
-      cout << "Connect\n";
+      //cout << "Connect\n";
    }
    
    else if (buffer[1]==myPass)
@@ -90,31 +90,31 @@ void interpret1(unsigned int *buffer)
       switch (buffer[2])
       {
          case 2:
-            cout << "image\n";
+            //cout << "image\n";
             sendData(getImage(), buffer);
             break;
          case 4:
-            cout << "GPS\n";
+            //cout << "GPS\n";
             sendData(getGPS(), buffer);
             break;
          case 8:
-            cout << "dGPS\n";
+            //cout << "dGPS\n";
             sendData(getdGPS(), buffer);
             break;
          case 16:
             sendData(getLasers(), buffer);
             break;
          case 32:
-            cout << "MOVE BITCH\n";
+            //cout << "MOVE BITCH\n";
             sendData(move(buffer[3]), buffer);
             break;
          case 64:
-            cout << "Turn\n";
+            //cout << "Turn\n";
             sendData(turn(buffer[3]), buffer);
             break;
          case 128:
-            cout << "Sleep\n";
-            sleep(buffer[3]);
+            //cout << "Stop\n";
+            //sleep(buffer[3]);
             sendData(stop(), buffer);
             break;
          case 255:
@@ -141,7 +141,7 @@ void interpret2(unsigned char command, unsigned char data, unsigned int *buffer)
          //reply with ack?
          break;
       case 2:
-         cout << "Image: \n";
+         //cout << "Image: \n";
          //cout << (int *) getImage();
          sendData(getImage(), buffer);
          break;
@@ -155,16 +155,16 @@ void interpret2(unsigned char command, unsigned char data, unsigned int *buffer)
          sendData(getLasers(), buffer);
          break;
       case 32:
-         cout << "Move: ";
+         //cout << "Move: ";
          sendData(move(data), buffer);
          break;
       case 64:
-         cout << "Turn: ";
+         //cout << "Turn: ";
          sendData(turn(data), buffer);
          break;
       case 128:
          sleep(data);
-         cout << "Stop: ";
+         //cout << "Stop: ";
          sendData(stop(), buffer);
          break;/*
       case 255:
@@ -287,7 +287,7 @@ int main(int argc, char *argv[])
    
    while (1)
    {
-      cout << "New Client\n";
+      //cout << "New Client\n";
       unsigned int buffer[BUFSIZE/sizeof(unsigned int)], recvSize;
       bool is_class;
       clntLen=sizeof(cliAddr);
@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
             j+=4;
          }
 
-         for (int i=0; i<(int)htonl(buffer[6]); i+=2)
+         for (int i=0; i<htonl(buffer[6]); i+=2)
          {
             interpret2(buff[i],buff[i+1],buffer);
          }
