@@ -1,3 +1,4 @@
+
 /* Group 9: Mitchell Devenport, Nathan Jones,
  *	Richard Orr, and Sameer Singh
  * This program takes three inputs:
@@ -9,6 +10,7 @@
  */
 #include <stdio.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +27,7 @@ void getImage();
 void getGPS();
 void getdGPS();
 void writeGPS();
+void writedGPS();
 void getLasers();
 void move(int speed);
 void turn(int degrees);
@@ -49,6 +52,7 @@ union Protocol proto;
 int written = 0;
 FILE *image;
 FILE *data;
+FILE *data2;
 
 //socket data
 int sock;
@@ -92,7 +96,9 @@ int main (int argc, char **argv)
 
 	//start the data file
 	data=fopen("gpsdata.txt", "w");
+	data2=fopen("dgpsdata.txt","w");
 	fclose(data);
+	fclose(data2);
 
 	//This is now actual connection things
 	openSocket(&serverName, servPort);
@@ -231,6 +237,9 @@ void draw(int n, int l)
 	int i;
 	for (i=0; i<n; i++)
 	{
+        	data = fopen("gpsdata.txt","a");
+        	fprintf(data,"GPS Position %d:",(i));
+        	fclose(data);
 		getGPS();
 		//getImage();
 		move(l);
@@ -238,9 +247,13 @@ void draw(int n, int l)
 		stop();
 		getdGPS();
 		turn(n);
-		usleep(14/n);
+		usleep((14.0/n)+14.0);
 		stop();
 	}
+	data = fopen("gpsdata.txt", "a");
+	fprintf(data,"GPS Position %d:", n);
+	fclose(data);
+	getGPS();
 }
 
 void move(int n)
@@ -331,7 +344,6 @@ void getGPS()
         //get GPS data as response?
         recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
                 &fromAddr, &fromSize);
-	perror("fuck\n");
 	//write GPS
 	if (proto.class.payloadSize!=0)
 		writeGPS();
@@ -356,7 +368,7 @@ void getdGPS()
         //write data
 	if(proto.class.payloadSize!=0)
 	{
-		writeGPS();
+		writedGPS();
 	}
 }
 
@@ -399,6 +411,47 @@ void writeGPS() {
 	{
 		//write for group protocol
 	}
+}
+
+void writedGPS() {
+        char *start;
+        char *index;
+        int i;
+        int sum=0;
+
+        if (protocol == 0)
+        {
+                printf("%d\n",proto.class.totalSize);
+                start = (char *) malloc(sizeof(char)*proto.class.totalSize);
+                index = start;
+                for (i=0; i<proto.class.payloadSize&&
+                        i<proto.class.totalSize; i++)
+                {
+                        *index = proto.class.payload[i];
+                        index++;
+                }
+                sum = proto.class.payloadSize;
+                while(sum<proto.class.totalSize)
+                {
+                        recvfrom(sock, &proto, MAX, 0, (struct
+                                sockaddr *) &fromAddr, &fromSize);
+                        sum += proto.class.payloadSize;
+                        for (i = 0; i<proto.class.payloadSize; i++)
+                        {
+                                *index = proto.class.payload[i];
+                                index++;
+                        }
+                }
+        data2 = fopen("dgpsdata.txt","a");
+        fwrite(start, 1, sum, data2);
+        fwrite("\n",1,1,data2);
+        free(start);
+        fclose(data2);
+        }
+        else
+        {
+                //write for group protocol
+        }
 }
 
 void writeImage()

@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
             j+=4;
          }
 
-         for (int i=0; i<htonl(buffer[6]); i+=2)
+         for (int i=0; i<(int)htonl(buffer[6]); i+=2)
          {
             interpret2(buff[i],buff[i+1],buffer);
          }
