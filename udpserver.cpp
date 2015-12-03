@@ -26,11 +26,13 @@ bool quit=0;
 
 void sendData(char *data, unsigned int *buffer)
 {
-   int size=(int) data[0]; //total data to send
+   cout << "YOYO MA\n";
+   int size=((int *) data)[0]; //total data to send
    data+=4;
    cout << "size: " << size << endl;
    int buff_size=BUFSIZE-HEADSIZE;
-   int send=size/buff_size;
+   int send=size/buff_size+1;
+   cout << "total: " << send << endl;
    int start=0;
    if (size%buff_size!=0)
       send++;
@@ -53,16 +55,13 @@ void sendData(char *data, unsigned int *buffer)
       else
          buffer[6]=buff_size;
          
-      cout << buffer[6] << endl;
-      
-      if (buffer[2]==4)
+      //cout << buffer[6] << endl;
+      /*
+      for (i=0;i<7;i++)
       {
-      for (i=0;i<BUFSIZE;i++)
-      {
-         cout << (int) ((char *)buffer)[i] << endl;
+         cout << buffer[i] << endl;//cout << (int) ((char *)buffer)[i] << endl;
       }
-      }
-      
+      */
       if ((int) sendto(servSock, buffer, BUFSIZE, 0, 
       (struct sockaddr *) &cliAddr, sizeof(cliAddr)) != BUFSIZE)
       {
@@ -89,10 +88,11 @@ void interpret1(unsigned int *buffer)
    
    else if (buffer[1]==myPass)
    {
-      cout << "request: " << buffer[2] << endl;
+      //cout << "request: " << buffer[2] << endl;
       switch (buffer[2])
       {
          case 2:
+            cout << "image\n";
             sendData(getImage(), buffer);
             break;
          case 4:
@@ -100,6 +100,7 @@ void interpret1(unsigned int *buffer)
             sendData(getGPS(), buffer);
             break;
          case 8:
+            cout << "dGPS\n";
             sendData(getdGPS(), buffer);
             break;
          case 16:
@@ -107,12 +108,14 @@ void interpret1(unsigned int *buffer)
             break;
          case 32:
             cout << "MOVE BITCH\n";
-            sendData(move((float) buffer[3]/1000.0), buffer);
+            sendData(move(buffer[3]), buffer);
             break;
          case 64:
-            sendData(turn((float) buffer[3]/1000.0), buffer);
+            cout << "Turn\n";
+            sendData(turn(buffer[3]), buffer);
             break;
          case 128:
+            cout << "Sleep\n";
             sleep(buffer[3]);
             sendData(stop(), buffer);
             break;
@@ -179,6 +182,12 @@ int main(int argc, char *argv[])
    unsigned int clntLen;
    //struct sockaddr_in servAddr;
    char *servIP, *robotID;
+   
+   if (argc<9)
+   {
+      cerr << "./server -h <hostname-of-robot> -i <robot-id> -n <robot-number> -p <port>" << endl;
+      exit(1);
+   }
    
    //port
    if (strcmp(argv[1],"-p")==0)
@@ -251,12 +260,7 @@ int main(int argc, char *argv[])
    }
    
    setVar(servIP, robotID, robotNum);
-   
-   if (argc<9)
-   {
-      cerr << "./server -h <hostname-of-robot> -i <robot-id> -n <robot-number> -p <port>" << endl;
-      exit(1);
-   }
+  
    //commands(argv);
 
    myPass=rand();
