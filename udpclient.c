@@ -91,7 +91,7 @@ int main (int argc, char **argv)
 	}
 
 	//start the data file
-	data=fopen("gpsdata.txt", "w+");
+	data=fopen("gpsdata.txt", "w");
 	fclose(data);
 
 	//This is now actual connection things
@@ -126,11 +126,11 @@ int main (int argc, char **argv)
 			index++;
 			*index=64;//turn
 			index++;
-			*index=1000*(14/5)/numSides;
+			*index=1;
 			index++;
 			*index=128;//stop
 			index++;
-			*index=5;
+			*index=14/numSides;
 			index++;
 			*index=8;//dgps
 			index++;
@@ -217,7 +217,7 @@ void openSocket(char **servIP, unsigned short servPort)
 
 	//set timeout
         struct timeval timeout;               
-        timeout.tv_sec=5;
+        timeout.tv_sec=50;
         timeout.tv_usec=0;
         if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout,
                         sizeof(timeout))<0)
@@ -236,7 +236,7 @@ void draw(int n, int l)
 		stop();
 		getdGPS();
 		turn(n);
-		sleep(5);
+		usleep(14/n);
 		stop();
 	}
 }
@@ -252,7 +252,7 @@ void move(int n)
         proto.class.offset=0;
 	sendto(sock,&proto,MAX,0,(struct sockaddr *)
            	&servAddr,sizeof(servAddr));
-	//get GPS data as response?
+	
        	recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
                	&fromAddr, &fromSize);
 	//write data?
@@ -280,7 +280,7 @@ void turn(int n)
         proto.class.protocol=0;
         proto.class.password=password;
         proto.class.cliRequest=64;
-        proto.class.requestData = (200* 14)/n;
+        proto.class.requestData = 1;
         proto.class.totalSize=0;
         proto.class.payloadSize=0;
         proto.class.offset=0;
@@ -329,8 +329,9 @@ void getGPS()
         //get GPS data as response?
         recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
                 &fromAddr, &fromSize);
+	perror("fuck\n");
 	//write GPS
-	if (proto.class.totalSize!=0)
+	if (proto.class.payloadSize!=0)
 		writeGPS();
 }
 
@@ -351,7 +352,7 @@ void getdGPS()
         recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
                 &fromAddr, &fromSize);
         //write data
-	if(proto.class.totalSize!=0)
+	if(proto.class.payloadSize!=0)
 	{
 		writeGPS();
 	}
