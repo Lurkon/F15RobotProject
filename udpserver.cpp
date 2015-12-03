@@ -30,7 +30,6 @@ void sendData(char *data, unsigned int *buffer)
    data+=4;
    int buff_size=BUFSIZE-HEADSIZE;
    int send=size/buff_size;
-   cout << "total: " << send << endl;
    int start=0;
    if (size%buff_size!=0)
       send++;
@@ -49,7 +48,7 @@ void sendData(char *data, unsigned int *buffer)
       }
       
       if (i>size)
-         buffer[6]=i-size;
+         buffer[6]=size-(j-1)*buff_size;
       else
          buffer[6]=buff_size;
          
@@ -68,7 +67,7 @@ void sendData(char *data, unsigned int *buffer)
          close(servSock);
          exit(1);
       }
-      cout << "size: " << size << " offset: " << buffer[4] << " total: " << buffer[5] << endl;
+      cout << "offset: " << buffer[4] << " total: " << buffer[5] << " payload: " << buffer[6] << endl;
       start+=BUFSIZE-HEADSIZE;
    }
    //free(data);
@@ -274,15 +273,6 @@ int main(int argc, char *argv[])
    #ifdef __APPLE__   // MacOS/X requires an additional call also
    setsockopt(servSock, SOL_SOCKET, SO_REUSEPORT, &trueValue, sizeof(trueValue));
    #endif
-   
-  /* struct timeval timeout;               
-   timeout.tv_sec=5;
-   timeout.tv_usec=0;
-   if (setsockopt (servSock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout))<0)
-   {
-      cerr << "setsockopt send failed\n";
-      exit(1);
-   }*/
    
    memset(&servAddr,0,sizeof(servAddr));
    servAddr.sin_family=AF_INET;
