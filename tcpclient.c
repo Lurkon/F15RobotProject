@@ -252,14 +252,14 @@ char* move(int speed){
 	return response;
 }
 
-char* turn(float degrees){
+char* turn(int degrees){
 	openSocket();
 
 	//Set server port
     servAddr.sin_port = htons(8082);
 
     //Set up the request string to the server
-    char* requestHolder = "GET /twist?id=%s&az=%f HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
+    char* requestHolder = "GET /twist?id=%s&az=%d HTTP/1.1\r\nUser-Agent: Wget/1.14 (darwin12.2.1)\r\nAccept: */*\r\nHost: 169.55.155.236\r\nConnection: Keep-Alive\r\n\r\n";
     char* requestString = malloc(sizeof(char) * (strlen(robotID) + strlen(requestHolder) + log10(degrees)));
 
     sprintf(requestString, requestHolder, robotID, degrees);
