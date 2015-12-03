@@ -275,14 +275,14 @@ int main(int argc, char *argv[])
    setsockopt(servSock, SOL_SOCKET, SO_REUSEPORT, &trueValue, sizeof(trueValue));
    #endif
    
-   struct timeval timeout;               
+  /* struct timeval timeout;               
    timeout.tv_sec=5;
    timeout.tv_usec=0;
    if (setsockopt (servSock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout))<0)
    {
       cerr << "setsockopt send failed\n";
       exit(1);
-   }
+   }*/
    
    memset(&servAddr,0,sizeof(servAddr));
    servAddr.sin_family=AF_INET;
