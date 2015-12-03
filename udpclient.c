@@ -232,7 +232,7 @@ void draw(int n, int l)
 	for (i=0; i<n; i++)
 	{
 		getGPS();
-		getImage();
+		//getImage();
 		move(l);
 		sleep(1);
 		stop();
@@ -368,9 +368,11 @@ void writeGPS() {
 
 	if (protocol == 0)
 	{
-		start = malloc(proto.class.totalSize);
+		printf("%d\n",proto.class.totalSize);
+		start = (char *) malloc(sizeof(char)*proto.class.totalSize);
 		index = start;
-		for (i=0; i<proto.class.payloadSize; i++)
+		for (i=0; i<proto.class.payloadSize&&
+			i<proto.class.totalSize; i++)
 		{
 			*index = proto.class.payload[i];
 			index++;
@@ -389,6 +391,7 @@ void writeGPS() {
 		}
 	data = fopen("gpsdata.txt","a");
 	fwrite(start, 1, sum, data);
+	fwrite("\n",1,1,data);
 	free(start);
 	fclose(data);
 	}
