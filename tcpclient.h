@@ -23,7 +23,7 @@ char* getGPS();
 char* getdGPS();
 char* getLasers();
 char* move(int speed);
-char* turn(float degrees);
+char* turn(int degrees);
 char* stop();
 void DieWithError(char* errorMessage);
 
