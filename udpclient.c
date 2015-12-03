@@ -158,6 +158,7 @@ int main (int argc, char **argv)
 		protocol=0;
 		if(connectClass()!=0)
 			DieWithError("Could not connect!\n");
+		stop();
 		draw (numSides, sideLength);
 		draw (numSides-1, sideLength);
 		disconnectClass();
@@ -243,11 +244,13 @@ void draw(int n, int l)
 		getGPS();
 		//getImage();
 		move(l);
-		sleep(1);
+		//sleep(1);
 		stop();
 		getdGPS();
 		turn(n);
-		usleep((14.0/n)+14.0);
+		float waittime=9.0+(14.0/(float)n);
+printf("sleep for: %.3f\n",waittime);
+		usleep(waittime);
 		stop();
 	}
 	data = fopen("gpsdata.txt", "a");
@@ -380,7 +383,7 @@ void writeGPS() {
 
 	if (protocol == 0)
 	{
-		printf("%d\n",proto.class.totalSize);
+		//printf("%d\n",proto.class.totalSize);
 		start = (char *) malloc(sizeof(char)*proto.class.totalSize);
 		index = start;
 		for (i=0; i<proto.class.payloadSize&&
@@ -421,7 +424,7 @@ void writedGPS() {
 
         if (protocol == 0)
         {
-                printf("%d\n",proto.class.totalSize);
+                //printf("%d\n",proto.class.totalSize);
                 start = (char *) malloc(sizeof(char)*proto.class.totalSize);
                 index = start;
                 for (i=0; i<proto.class.payloadSize&&
