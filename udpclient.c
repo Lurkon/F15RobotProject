@@ -245,15 +245,14 @@ void draw(int n, int l)
 	for (i=0; i<n; i++)
 	{
 		getGPS();
-		//getLasers();
+		getLasers();
 		//getImage();
 		move(l);
-		//sleep(1);
+		sleep(1);
 		stop();
 		getdGPS();
 		turn(n);
-		float waittime=9.5+(14.0/(float)n);
-printf("sleep for: %.3f\n",waittime);
+		float waittime=14.0+(14.0/(float)n);
 		usleep(waittime);
 		stop();
 	}
@@ -493,36 +492,45 @@ void writeLasers()
         char *index;
         int i;
         int sum=0;
+	int hi= 0;
 
         if (protocol == 0)
         {
                 //printf("%d\n",proto.class.totalSize);
-                start = (char *) malloc(sizeof(char)*proto.class.totalSize);
+                start = (char *) malloc((proto.class.totalSize)+1);
                 index = start;
                 for (i=0; i<proto.class.payloadSize&&
                         i<proto.class.totalSize; i++)
                 {
+			hi++;
                         *index = proto.class.payload[i];
                         index++;
                 }
                 sum = proto.class.payloadSize;
-                while(sum<proto.class.totalSize)
-                {   
+                while(sum<proto.class.totalSize&&hi<proto.class.totalSize)
+                {
                         recvfrom(sock, &proto, MAX, 0, (struct
                                 sockaddr *) &fromAddr, &fromSize);
                         sum += proto.class.payloadSize;
-                        for (i = 0; i<proto.class.payloadSize; i++)
-                        { 
+                        for (i = 0; i<proto.class.payloadSize&&
+				hi<proto.class.totalSize; i++)
+                        {
                                 *index = proto.class.payload[i];
-                                index++;
+                                if(hi++<proto.class.totalSize)
+					index++;
+				else
+				{
+					i=proto.class.totalSize;
+					sum++;
+				}
                         }
                 }
-        data2 = fopen("lasersdata.txt","a");
+        data3 = fopen("laserdata.txt","a");
         time(&rawtime);
         timeinfo=localtime(&rawtime);
         fprintf(data3,"%s:",asctime(timeinfo));
-        fwrite(start, 1, sum, data2);
-        fwrite("\n",1,1,data2);
+        fwrite(start, 1, sum, data3);
+        fwrite("\n",1,1,data3);
         free(start);
         fclose(data3);
         }
