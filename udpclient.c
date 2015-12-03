@@ -28,6 +28,7 @@ void getGPS();
 void getdGPS();
 void writeGPS();
 void writedGPS();
+void writeLasers();
 void getLasers();
 void move(int speed);
 void turn(int degrees);
@@ -53,6 +54,9 @@ int written = 0;
 FILE *image;
 FILE *data;
 FILE *data2;
+FILE *data3;
+time_t rawtime;
+struct tm * timeinfo;
 
 //socket data
 int sock;
@@ -97,8 +101,10 @@ int main (int argc, char **argv)
 	//start the data file
 	data=fopen("gpsdata.txt", "w");
 	data2=fopen("dgpsdata.txt","w");
+	data3=fopen("laserdata.txt","w");
 	fclose(data);
 	fclose(data2);
+	fclose(data3);
 
 	//This is now actual connection things
 	openSocket(&serverName, servPort);
@@ -238,17 +244,15 @@ void draw(int n, int l)
 	int i;
 	for (i=0; i<n; i++)
 	{
-        	data = fopen("gpsdata.txt","a");
-        	fprintf(data,"GPS Position %d:",(i));
-        	fclose(data);
 		getGPS();
+		//getLasers();
 		//getImage();
 		move(l);
 		//sleep(1);
 		stop();
 		getdGPS();
 		turn(n);
-		float waittime=9.0+(14.0/(float)n);
+		float waittime=9.5+(14.0/(float)n);
 printf("sleep for: %.3f\n",waittime);
 		usleep(waittime);
 		stop();
@@ -374,6 +378,26 @@ void getdGPS()
 		writedGPS();
 	}
 }
+void getLasers()
+{
+        proto.class.protocol=0; 
+        proto.class.password=password;
+        proto.class.cliRequest=16;
+        proto.class.requestData = 0;
+        proto.class.totalSize=0;
+        proto.class.payloadSize=0; 
+        proto.class.offset=0;
+        sendto(sock,&proto,MAX,0,(struct sockaddr *)
+                &servAddr,sizeof(servAddr));
+ 
+        //RECEIVE DATA
+        //get GPS data as response?
+        recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
+                &fromAddr, &fromSize);
+        //write GPS
+        if (proto.class.payloadSize!=0)
+                writeLasers();
+}
 
 void writeGPS() {
 	char *start;
@@ -405,6 +429,9 @@ void writeGPS() {
 			}
 		}
 	data = fopen("gpsdata.txt","a");
+	time(&rawtime);
+	timeinfo=localtime(&rawtime);
+        fprintf(data,"%s:",asctime(timeinfo));
 	fwrite(start, 1, sum, data);
 	fwrite("\n",1,1,data);
 	free(start);
@@ -446,6 +473,9 @@ void writedGPS() {
                         }
                 }
         data2 = fopen("dgpsdata.txt","a");
+        time(&rawtime);
+        timeinfo=localtime(&rawtime);
+        fprintf(data2,"%s:",asctime(timeinfo)); 
         fwrite(start, 1, sum, data2);
         fwrite("\n",1,1,data2);
         free(start);
@@ -457,6 +487,51 @@ void writedGPS() {
         }
 }
 
+void writeLasers()
+{
+        char *start;
+        char *index;
+        int i;
+        int sum=0;
+
+        if (protocol == 0)
+        {
+                //printf("%d\n",proto.class.totalSize);
+                start = (char *) malloc(sizeof(char)*proto.class.totalSize);
+                index = start;
+                for (i=0; i<proto.class.payloadSize&&
+                        i<proto.class.totalSize; i++)
+                {
+                        *index = proto.class.payload[i];
+                        index++;
+                }
+                sum = proto.class.payloadSize;
+                while(sum<proto.class.totalSize)
+                {   
+                        recvfrom(sock, &proto, MAX, 0, (struct
+                                sockaddr *) &fromAddr, &fromSize);
+                        sum += proto.class.payloadSize;
+                        for (i = 0; i<proto.class.payloadSize; i++)
+                        { 
+                                *index = proto.class.payload[i];
+                                index++;
+                        }
+                }
+        data2 = fopen("lasersdata.txt","a");
+        time(&rawtime);
+        timeinfo=localtime(&rawtime);
+        fprintf(data3,"%s:",asctime(timeinfo));
+        fwrite(start, 1, sum, data2);
+        fwrite("\n",1,1,data2);
+        free(start);
+        fclose(data3);
+        }
+        else
+        {
+                //write for group protocol
+        }
+
+}
 void writeImage()
 {
         char *start;
