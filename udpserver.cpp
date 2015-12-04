@@ -58,6 +58,8 @@ void sendData(char *data, unsigned int *buffer)
          close(servSock);
          exit(1);
       }
+//cout<<"offset: "<<buffer[4]<<" total: "<<buffer[5]<<" payload: 
+//"<<buffer[6] << endl;
       start+=BUFSIZE-HEADSIZE;
    }
 }
@@ -66,12 +68,14 @@ void interpret(unsigned int *buffer)
 {
 //cout<<"hi"<<endl;	
 
-   buffer[1]=htonl(buffer[1]);
+   //buffer[1]=htonl(buffer[1]);
    if (buffer[1]==0 && buffer[2]==0)
-      buffer[1]=myPass;
-   
+   {   buffer[1]=myPass;
+//cout<<"hell?"<<endl;
+   }
    else if (buffer[1]==myPass)
    {
+//cout<<buffer[2]<<endl;
       switch (buffer[2])
       {
          case 1:

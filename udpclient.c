@@ -145,7 +145,7 @@ int connectClass()
 	{printf("protocol?\n");
 		return -1;}
 	password = proto.class.password;
-printf("%d\n",password);
+//printf("%d\n",password);
 	if(password==0)
 		return -1;
 	if(sendto(sock,&proto,MAX,0,(struct sockaddr *)
@@ -294,6 +294,7 @@ void getImage()
 
 void getGPS()
 {
+	//printf("we made it to gps");
         proto.class.protocol=protocol;
         proto.class.password=password;
         proto.class.cliRequest=4;  
@@ -308,6 +309,8 @@ void getGPS()
         //get GPS data as response?
         recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
                 &fromAddr, &fromSize);
+	//printf("oh look, something happened.%d\n", 
+//proto.class.payloadSize);
 	//write GPS
 	if (proto.class.payloadSize!=0)
 		writeGPS();
@@ -364,7 +367,7 @@ void writeGPS() {
 
 //	if (protocol == 0)
 //	{
-		//printf("%d\n",proto.class.totalSize);
+		printf("%d\n",proto.class.totalSize);
 		start = (char *) malloc(sizeof(char)*proto.class.totalSize);
 		index = start;
 		for (i=0; i<proto.class.payloadSize&&
