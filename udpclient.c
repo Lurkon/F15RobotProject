@@ -110,64 +110,17 @@ int main (int argc, char **argv)
 	openSocket(&serverName, servPort);
 
 	//make connection using group 9 protocol
+	protocol=9;
 	if(connectClass()!=0)
 	{
-		/*/good connection
-		proto.nine.protocol = 9;
-		proto.nine.password = password;
-		char *index = (char *)proto.nine.payload;
-		for (j=0; j<2; j++)
-		{
-		for (i=0; i<numSides; i++)
-		{
-			*index=2;
-			index++;
-			*index=0;
-			index++;
-			*index=32;//move
-			index++;
-			*index=(char) sideLength;
-			index++;
-			*index=128;//stop
-			index++;
-			*index=1;
-			index++;
-			*index=4;//GPS
-			index++;
-			*index=0;
-			index++;
-			*index=64;//turn
-			index++;
-			*index=1;
-			index++;
-			*index=128;//stop
-			index++;
-			*index=14/numSides;
-			index++;
-			*index=8;//dgps
-			index++;
-			*index=0;
-			index++;
-		}
-		numSides--;
-		}
-		*index = 2;
-		index++;
-		*index = 0;
-		index++;
-		*index =1;
-		index++;
-		*index=0;*/
-
-
 		protocol=0;
 		if(connectClass()!=0)
 			DieWithError("Could not connect!\n");
-		stop();
-		draw (numSides, sideLength);
-		draw (numSides-1, sideLength);
-		disconnectClass();
 	}
+	stop();
+	draw (numSides, sideLength);
+	draw (numSides-1, sideLength);
+	disconnectClass();
 	return 0;
 }
 
@@ -188,9 +141,11 @@ int connectClass()
 		return -1;
 	recvfrom(sock, &proto, MAX, 0, (struct sockaddr *)
 		&fromAddr, &fromSize);
-	if(proto.class.protocol != 0)
-		return -1;
+	if(proto.class.protocol != protocol)
+	{printf("protocol?\n");
+		return -1;}
 	password = proto.class.password;
+printf("%d\n",password);
 	if(password==0)
 		return -1;
 	if(sendto(sock,&proto,MAX,0,(struct sockaddr *)
@@ -235,7 +190,7 @@ void openSocket(char **servIP, unsigned short servPort)
 
 	//set timeout
         struct timeval timeout;               
-        timeout.tv_sec=10;
+        timeout.tv_sec=20;
         timeout.tv_usec=0;
         if (setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout,
                         sizeof(timeout))<0)
@@ -407,8 +362,8 @@ void writeGPS() {
 	int i;
 	int sum=0;
 
-	if (protocol == 0)
-	{
+//	if (protocol == 0)
+//	{
 		//printf("%d\n",proto.class.totalSize);
 		start = (char *) malloc(sizeof(char)*proto.class.totalSize);
 		index = start;
@@ -438,11 +393,11 @@ void writeGPS() {
 	fwrite("\n",1,1,data);
 	free(start);
 	fclose(data);
-	}
-	else
-	{
-		//write for group protocol
-	}
+//	}
+//	else
+//	{
+//		//write for group protocol
+//	}
 }
 
 void writedGPS() {
@@ -451,8 +406,8 @@ void writedGPS() {
         int i;
         int sum=0;
 
-        if (protocol == 0)
-        {
+//        if (protocol == 0)
+//        {
                 //printf("%d\n",proto.class.totalSize);
                 start = (char *) malloc(sizeof(char)*proto.class.totalSize);
                 index = start;
@@ -482,11 +437,11 @@ void writedGPS() {
         fwrite("\n",1,1,data2);
         free(start);
         fclose(data2);
-        }
-        else
-        {
-                //write for group protocol
-        }
+//        }
+//        else
+//        {
+//                //write for group protocol
+//        }
 }
 
 void writeLasers()
@@ -497,8 +452,8 @@ void writeLasers()
         int sum=0;
 	int hi= 0;
 
-        if (protocol == 0)
-        {
+//        if (protocol == 0)
+//        {
                 //printf("%d\n",proto.class.totalSize);
                 start = (char *) malloc((proto.class.totalSize)+1);
                 index = start;
@@ -536,11 +491,11 @@ void writeLasers()
         fwrite("\n",1,1,data3);
         free(start);
         fclose(data3);
-        }
-        else
-        {
-                //write for group protocol
-        }
+//        }
+//        else
+//        {
+//                //write for group protocol
+//        }
 
 }
 void writeImage()
@@ -551,8 +506,8 @@ void writeImage()
         int sum=0;
 	char *name = 0;
 
-        if (protocol == 0)
-        {
+//        if (protocol == 0)
+//        {
                 start = malloc(proto.class.totalSize);
                 index = start;
                 for (i=0; i<proto.class.payloadSize; i++)
@@ -577,11 +532,11 @@ void writeImage()
         fwrite(start, 1, sum, image);
         free(start);
 	fclose(image);
-        }
-        else
-        {
-                //write for group protocol
-        }
+//        }
+//        else
+//        {
+//                //write for group protocol
+//        }
 
 }
 

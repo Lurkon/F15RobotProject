@@ -64,6 +64,8 @@ void sendData(char *data, unsigned int *buffer)
 
 void interpret(unsigned int *buffer)
 {
+//cout<<"hi"<<endl;	
+
    buffer[1]=htonl(buffer[1]);
    if (buffer[1]==0 && buffer[2]==0)
       buffer[1]=myPass;
@@ -109,8 +111,8 @@ void interpret(unsigned int *buffer)
             break;
       }
    }
-   for (int i=0;i<75;i++)
-      buffer[i]=ntohl(buffer[i]);
+//   for (int i=0;i<75;i++)
+//      buffer[i]=ntohl(buffer[i]);
 }
 
 int main(int argc, char *argv[])
