@@ -118,6 +118,7 @@ int main (int argc, char **argv)
 			DieWithError("Could not connect!\n");
 	}
 	stop();
+//printf("draw the %s-gram", sideLength);
 	draw (numSides, sideLength);
 	draw (numSides-1, sideLength);
 	disconnectClass();
@@ -204,7 +205,7 @@ void draw(int n, int l)
 	{
 		getGPS();
 		getLasers();
-		//getImage();
+		getImage();
 		move(l);
 		sleep(1);
 		stop();
@@ -367,7 +368,7 @@ void writeGPS() {
 
 //	if (protocol == 0)
 //	{
-		printf("%d\n",proto.class.totalSize);
+//		printf("%d\n",proto.class.totalSize);
 		start = (char *) malloc(sizeof(char)*proto.class.totalSize);
 		index = start;
 		for (i=0; i<proto.class.payloadSize&&
@@ -507,30 +508,44 @@ void writeImage()
         char *index;
         int i;
         int sum=0;
-	char *name = 0;
+	char name[MAX];
+	int hi = 0;
 
-//        if (protocol == 0)
-//        {
-                start = malloc(proto.class.totalSize);
+//printf("%d\n",proto.class.totalSize);
+                start = (char *) malloc(proto.class.totalSize);
                 index = start;
-                for (i=0; i<proto.class.payloadSize; i++)
+                for (i=0; i<proto.class.payloadSize&&
+			i<proto.class.totalSize; i++)
                 {
+			hi++;
                         *index = proto.class.payload[i];
                         index++;
                 }
                 sum = proto.class.payloadSize;
-                while(sum<proto.class.totalSize)
+                while(sum<proto.class.totalSize&&hi<proto.class.totalSize)
                 {
                         recvfrom(sock, &proto, MAX, 0, (struct
                                 sockaddr *) &fromAddr, &fromSize);
                         sum += proto.class.payloadSize;
-                        for (i = 0; i<proto.class.payloadSize; i++)
+                        for (i = 0; i<proto.class.payloadSize&&
+				hi<proto.class.totalSize; i++)
                         {
                                 *index = proto.class.payload[i];
-                                index++;
+				if(hi++<proto.class.totalSize)
+                                	index++;
+				else
+				{
+					i=proto.class.totalSize;
+					sum++;
+				}
                         }
                 }
-	sprintf(name, "picture%d.jpg",written);
+//	time(&rawtime);
+//      timeinfo=localtime(&rawtime);
+	
+	sprintf(name,"picture %d.jpeg",written);
+	written++;
+printf("%s\n",name);
         image = fopen(name,"w");
         fwrite(start, 1, sum, image);
         free(start);
