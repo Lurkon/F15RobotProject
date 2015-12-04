@@ -118,18 +118,11 @@ int main (int argc, char **argv)
 			DieWithError("Could not connect!\n");
 	}
 	stop();
-//printf("draw the %s-gram", sideLength);
 	draw (numSides, sideLength);
 	draw (numSides-1, sideLength);
 	disconnectClass();
 	return 0;
 }
-
-/*/connects to the proxy, returns 0 if successful, -1 else
-int connectNine()
-{
-
-}*/
 
 //connects to the proxy, returns 0 if successful, -1 else
 int connectClass()
@@ -211,7 +204,8 @@ void draw(int n, int l)
 		stop();
 		getdGPS();
 		turn(n);
-		float waittime=14.0+(14.0/(float)n);
+		float waittime=(14.0/(float)n);
+		waittime=waittime*1000000;
 		usleep(waittime);
 		stop();
 	}
@@ -460,7 +454,7 @@ void writeLasers()
 //        {
                 //printf("%d\n",proto.class.totalSize);
                 start = (char *) malloc((proto.class.totalSize)+1);
-                index = start;
+                index = start+proto.class.offset;
                 for (i=0; i<proto.class.payloadSize&&
                         i<proto.class.totalSize; i++)
                 {
@@ -471,6 +465,7 @@ void writeLasers()
                 sum = proto.class.payloadSize;
                 while(sum<proto.class.totalSize&&hi<proto.class.totalSize)
                 {
+			index = start + proto.class.offset;
                         recvfrom(sock, &proto, MAX, 0, (struct
                                 sockaddr *) &fromAddr, &fromSize);
                         sum += proto.class.payloadSize;
@@ -495,11 +490,6 @@ void writeLasers()
         fwrite("\n",1,1,data3);
         free(start);
         fclose(data3);
-//        }
-//        else
-//        {
-//                //write for group protocol
-//        }
 
 }
 void writeImage()
