@@ -79,7 +79,7 @@ int main (int argc, char **argv)
 	int numSides;
 	int sideLength;
 	unsigned short servPort;
-	int i, j;
+	//int i, j;
 
 	//check command line parameters
 	if(cmdLine(argc, argv, &serverName, &serverPort, &numSides,
@@ -110,9 +110,9 @@ int main (int argc, char **argv)
 	openSocket(&serverName, servPort);
 
 	//make connection using group 9 protocol
-	if(connectNine()==0)
+	if(connectClass()!=0)
 	{
-		//good connection
+		/*/good connection
 		proto.nine.protocol = 9;
 		proto.nine.password = password;
 		char *index = (char *)proto.nine.payload;
@@ -157,10 +157,9 @@ int main (int argc, char **argv)
 		index++;
 		*index =1;
 		index++;
-		*index=0;
-	}
-	else
-	{
+		*index=0;*/
+
+
 		protocol=0;
 		if(connectClass()!=0)
 			DieWithError("Could not connect!\n");
@@ -172,16 +171,16 @@ int main (int argc, char **argv)
 	return 0;
 }
 
-//connects to the proxy, returns 0 if successful, -1 else
+/*/connects to the proxy, returns 0 if successful, -1 else
 int connectNine()
 {
-return -1;
-}
+
+}*/
 
 //connects to the proxy, returns 0 if successful, -1 else
 int connectClass()
 {
-	proto.class.protocol=0;
+	proto.class.protocol=protocol;
 	proto.class.password=0;
 	proto.class.cliRequest=0;
 	if(sendto(sock,&proto,MAX,0,(struct sockaddr *) 
@@ -201,11 +200,15 @@ int connectClass()
 		return 0;
 	return -1;
 }
+
 void disconnectClass()
 {
-        proto.class.protocol=0;
+        proto.class.protocol=protocol;
         proto.class.password=password; 
-        proto.class.cliRequest=255;
+	if (protocol == 9)
+		proto.class.cliRequest=1;
+	else
+        	proto.class.cliRequest=255;
         if(sendto(sock,&proto,MAX,0,(struct sockaddr *)
                 &servAddr,sizeof(servAddr))!=MAX)
           	DieWithError("Could not Quit.\n");
@@ -264,7 +267,7 @@ void draw(int n, int l)
 
 void move(int n)
 {
-	proto.class.protocol=0;
+	proto.class.protocol=protocol;
 	proto.class.password=password;
 	proto.class.cliRequest=32;
 	proto.class.requestData = n;
@@ -281,7 +284,7 @@ void move(int n)
 
 void stop()
 {
-        proto.class.protocol=0;
+        proto.class.protocol=protocol;
         proto.class.password=password;
         proto.class.cliRequest=128;
         proto.class.requestData = 0;
@@ -298,7 +301,7 @@ void stop()
 
 void turn(int n)
 {
-        proto.class.protocol=0;
+        proto.class.protocol=protocol;
         proto.class.password=password;
         proto.class.cliRequest=64;
         proto.class.requestData = 1;
@@ -315,7 +318,7 @@ void turn(int n)
 
 void getImage()
 {
-        proto.class.protocol=0;
+        proto.class.protocol=protocol;
         proto.class.password=password;
         proto.class.cliRequest=2;  
         proto.class.requestData = 0;
@@ -336,7 +339,7 @@ void getImage()
 
 void getGPS()
 {
-        proto.class.protocol=0;
+        proto.class.protocol=protocol;
         proto.class.password=password;
         proto.class.cliRequest=4;  
         proto.class.requestData = 0;
@@ -357,7 +360,7 @@ void getGPS()
 
 void getdGPS()
 {
-        proto.class.protocol=0;
+        proto.class.protocol=protocol;
         proto.class.password=password;
         proto.class.cliRequest=8;  
         proto.class.requestData = 0;
@@ -379,7 +382,7 @@ void getdGPS()
 }
 void getLasers()
 {
-        proto.class.protocol=0; 
+        proto.class.protocol=protocol; 
         proto.class.password=password;
         proto.class.cliRequest=16;
         proto.class.requestData = 0;
