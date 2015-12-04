@@ -17,8 +17,6 @@
 
 using namespace std;
 
-//struct classProtocol *claProto;
-//struct nineProtocol *ourProto;
 unsigned int myPass;
 int servSock, servPort;
 sockaddr_in servAddr, cliAddr;
@@ -51,14 +49,7 @@ void sendData(char *data, unsigned int *buffer)
          buffer[6]=size-(j-1)*buff_size;
       else
          buffer[6]=buff_size;
-         
-      //cout << buffer[6] << endl;
-      /*
-      for (i=0;i<7;i++)
-      {
-         cout << buffer[i] << endl;//cout << (int) ((char *)buffer)[i] << endl;
-      }
-      */
+
       if ((int) sendto(servSock, buffer, BUFSIZE, 0, 
       (struct sockaddr *) &cliAddr, sizeof(cliAddr)) != BUFSIZE)
       {
@@ -67,61 +58,54 @@ void sendData(char *data, unsigned int *buffer)
          close(servSock);
          exit(1);
       }
-      //cout << "offset: " << buffer[4] << " total: " << buffer[5] << " payload: " << buffer[6] << endl;
       start+=BUFSIZE-HEADSIZE;
    }
-   //free(data);
 }
 
-void interpret1(unsigned int *buffer)
+void interpret(unsigned int *buffer)
 {
-   //cout << buffer[2] << "|" << htonl(buffer[2]) << endl;
-   //for (int i=0;i<75;i++)
-      buffer[1]=htonl(buffer[1]);
+   buffer[1]=htonl(buffer[1]);
    if (buffer[1]==0 && buffer[2]==0)
-   {
       buffer[1]=myPass;
-      //cout << "Connect\n";
-   }
    
    else if (buffer[1]==myPass)
    {
-      //cout << "request: " << buffer[2] << endl;
       switch (buffer[2])
       {
+         case 1:
+            if (buffer[0]!=0)
+            {
+               myPass=rand();
+               quit=1;
+            }
+            break;
          case 2:
-            //cout << "image\n";
             sendData(getImage(), buffer);
             break;
          case 4:
-            //cout << "GPS\n";
             sendData(getGPS(), buffer);
             break;
          case 8:
-            //cout << "dGPS\n";
             sendData(getdGPS(), buffer);
             break;
          case 16:
             sendData(getLasers(), buffer);
             break;
          case 32:
-            //cout << "MOVE BITCH\n";
             sendData(move(buffer[3]), buffer);
             break;
          case 64:
-            //cout << "Turn\n";
             sendData(turn(buffer[3]), buffer);
             break;
          case 128:
-            //cout << "Stop\n";
-            //sleep(buffer[3]);
             sendData(stop(), buffer);
             break;
          case 255:
-            myPass=rand();
-            quit=1;
-            //cout << "Quit\n";
-            //reply with ack?
+            if (buffer[0]==0)
+            {
+               myPass=rand();
+               quit=1;
+            }
             break;
       }
    }
@@ -129,56 +113,11 @@ void interpret1(unsigned int *buffer)
       buffer[i]=ntohl(buffer[i]);
 }
 
-void interpret2(unsigned char command, unsigned char data, unsigned int *buffer)
-{
-	//cout << (int) command << "|" << (int) data << endl;
-   switch (command)
-   {
-      case 1:
-         myPass=rand();
-         quit=1;
-         //cout << "Quit\n";
-         //reply with ack?
-         break;
-      case 2:
-         //cout << "Image: \n";
-         //cout << (int *) getImage();
-         sendData(getImage(), buffer);
-         break;
-      case 4:
-         sendData(getGPS(), buffer);
-         break;
-      case 8:
-         sendData(getdGPS(), buffer);
-         break;
-      case 16:
-         sendData(getLasers(), buffer);
-         break;
-      case 32:
-         //cout << "Move: ";
-         sendData(move(data), buffer);
-         break;
-      case 64:
-         //cout << "Turn: ";
-         sendData(turn(data), buffer);
-         break;
-      case 128:
-         sleep(data);
-         //cout << "Stop: ";
-         sendData(stop(), buffer);
-         break;/*
-      case 255:
-         getRequests(buffer);
-         break;*/
-   }
-}
-
 int main(int argc, char *argv[])
 {
    srand(time(NULL));
    int robotNum;
    unsigned int clntLen;
-   //struct sockaddr_in servAddr;
    char *servIP, *robotID;
    
    if (argc<9)
@@ -258,8 +197,6 @@ int main(int argc, char *argv[])
    }
    
    setVar(servIP, robotID, robotNum);
-  
-   //commands(argv);
 
    myPass=rand();
    if ((servSock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
@@ -287,9 +224,7 @@ int main(int argc, char *argv[])
    
    while (1)
    {
-      //cout << "New Client\n";
       unsigned int buffer[BUFSIZE/sizeof(unsigned int)], recvSize;
-      bool is_class;
       clntLen=sizeof(cliAddr);
 
       if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &cliAddr, &clntLen)<0))
@@ -298,13 +233,8 @@ int main(int argc, char *argv[])
          close(servSock);
          exit(1);
       }
-
-      if (buffer[0]==0)
-         is_class=1;
-      else
-         is_class=0;
          
-      interpret1(buffer); //updates buffer with the password
+      interpret(buffer); //updates buffer with the password
 
       if (sendto(servSock, buffer, BUFSIZE, 0, 
       (struct sockaddr *) &cliAddr, sizeof(cliAddr)) != BUFSIZE)
@@ -313,49 +243,18 @@ int main(int argc, char *argv[])
          close(servSock);
          exit(1);
       }
-      
-      if (is_class)
-      {
-         while (!quit)
-         {
-            if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &cliAddr, &clntLen))<0)
-            {
-               cerr << "recv() failed 1\n";
-               close(servSock);
-               exit(1);
-            }
-            
-            interpret1(buffer); //updates buffer with the response
-         }
-         quit=0;
-      }
-      
-      else
+
+      while (!quit)
       {
          if ((recvSize = recvfrom(servSock, buffer, BUFSIZE, 0, (struct sockaddr *) &cliAddr, &clntLen))<0)
          {
-            cerr << "recv() failed\n";
+            cerr << "recv() failed 1\n";
             close(servSock);
             exit(1);
          }
          
-         unsigned char *buff=new unsigned char[BUFSIZE-HEADSIZE];
-         int j=0;
-         for (int i=HEADSIZE; i<BUFSIZE; i+=4)
-         {
-            buff[j] = (htonl(buffer[i/4]) >> 24) & 0xFF;
-            buff[j+1] = (htonl(buffer[i/4]) >> 16) & 0xFF;
-            buff[j+2] = (htonl(buffer[i/4]) >> 8) & 0xFF;
-            buff[j+3] = htonl(buffer[i/4]) & 0xFF;
-            j+=4;
-         }
-
-         for (int i=0; i<(int)htonl(buffer[6]); i+=2)
-         {
-            interpret2(buff[i],buff[i+1],buffer);
-         }
+         interpret(buffer); //updates buffer with the response
       }
       quit=0;
-      //close(servSock);
    }
 }
