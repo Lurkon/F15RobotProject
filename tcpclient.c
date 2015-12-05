@@ -142,7 +142,7 @@ char* getResponse(int isImage){
 
         data = calloc(1,dataExpected + 4);
 
-        memcpy(data, startOfData, bytesToCopy);
+        memcpy(data+4, startOfData, bytesToCopy);
 
         totalBytesReceived = bytesToCopy;
 
