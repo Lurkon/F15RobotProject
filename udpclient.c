@@ -204,7 +204,7 @@ void draw(int n, int l)
 		stop();
 		getdGPS();
 		turn(n);
-		float waittime=(9.0/(float)n);
+		float waittime=(14.0/(float)n);
 		waittime=waittime*1000000;
 		usleep(waittime);
 		stop();
