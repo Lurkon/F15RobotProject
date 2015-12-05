@@ -16,7 +16,7 @@ extern "C" {
 
 void setVar(char* serv, char* robot, int robNum);
 void openSocket();
-char* getResponse();
+char* getResponse(int isImage);
 void sendRequest(char* requestString);
 char* getImage();
 char* getGPS();

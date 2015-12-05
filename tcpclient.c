@@ -7,7 +7,7 @@ int sock;
 int sockOpen = 0;
 struct sockaddr_in servAddr;
 
-/*int main(){
+int main(){
     servIP = "169.55.155.236";
     robotID = "5winnow";
     robotNum = 9;
@@ -34,8 +34,7 @@ struct sockaddr_in servAddr;
         dgps++;
     }
     printf("\n");
-	
-    
+
     char* lasers = getLasers();
     size = *(int*)lasers;
     lasers += 4;
@@ -85,13 +84,12 @@ struct sockaddr_in servAddr;
     char* image = getImage();
     size = *(int*)image;
     image += 4;
-
     for(i = 0; i<size; i++){
         fprintf(fp, "%c", *image);
         image++;
     }
     printf("\n");
-}*/
+}
 
 void setVar(char* serv, char* robot, int robNum){
     servIP = serv;
@@ -111,27 +109,67 @@ void openSocket(){
     servAddr.sin_addr.s_addr = *((unsigned long *) thehost->h_addr_list[0]);
 }
 
-char* getResponse(){
-	char* buffer = malloc(RCVBUFSIZE);
+char* getResponse(int isImage){
+	char* buffer = calloc(1, RCVBUFSIZE);
 
     //Receive data from the server until it is no longer sent
-    int msgCount = 1;
     int totalBytesReceived = 0;
     int bytesReceived;
 
-    while((bytesReceived = recv(sock, buffer + totalBytesReceived, RCVBUFSIZE, 0)) > 0)
-    {
-   		totalBytesReceived += bytesReceived;
-   		buffer = realloc(buffer, totalBytesReceived + RCVBUFSIZE);
-    	msgCount++;
+    if(!isImage){
+        char* startOfData;
+
+        while(1){
+            totalBytesReceived += recv(sock, buffer + totalBytesReceived, RCVBUFSIZE, 0);
+
+            if((startOfData = strstr(buffer, "\r\n\r\n")))
+                break;
+
+            buffer = realloc(buffer, totalBytesReceived + RCVBUFSIZE);
+        }
+
+        int dataExpected;
+        char* data;
+        char* parsed = strtok(buffer, "\r:");
+
+        while(strcmp("\nContent-Length", parsed) != 0)
+            parsed = strtok(NULL, "\r:");
+
+        parsed = strtok(NULL, "\r:");
+        dataExpected = atoi(parsed);
+        startOfData += 4;
+        int bytesToCopy = (buffer + totalBytesReceived) - (startOfData);
+
+        data = calloc(1,dataExpected + 4);
+
+        memcpy(data, startOfData, bytesToCopy);
+
+        totalBytesReceived = bytesToCopy;
+
+        while(totalBytesReceived < dataExpected)
+        {
+            totalBytesReceived += recv(sock, data + totalBytesReceived + 4, RCVBUFSIZE, 0);
+        }
+
+        *(int*) data = totalBytesReceived;
+        free(buffer);
+
+        return data;
+    } else {
+        while((bytesReceived = recv(sock, buffer + totalBytesReceived, RCVBUFSIZE, 0)) > 0)
+        {
+            totalBytesReceived += bytesReceived;
+            buffer = realloc(buffer, totalBytesReceived + RCVBUFSIZE);
+        }
+
+        char* beginning = strstr(buffer, "\r\n\r\n");
+        *(int*) beginning = totalBytesReceived - (int)(beginning-buffer) - 4;
+
+        free(buffer);
+
+        return beginning;
     }
 
-    char* beginning = strstr(buffer, "\r\n\r\n");
-    *(int*) beginning = totalBytesReceived - (int)(beginning-buffer) - 4;
-
-    free(buffer);
-
-    return beginning;
 }
 
 void sendRequest(char* request){
@@ -159,7 +197,7 @@ char* getImage(){
     sprintf(requestString, requestHolder, robotNum);
 
     sendRequest(requestString);
-    char* response = getResponse();
+    char* response = getResponse(1);
 
     free(requestString);
     close(sock);
@@ -180,7 +218,7 @@ char* getGPS(){
     sprintf(requestString, requestHolder, robotID);
 
     sendRequest(requestString);
-    char* response = getResponse();
+    char* response = getResponse(0);
 
     free(requestString);
     close(sock);
@@ -202,7 +240,7 @@ char* getdGPS(){
 
 
     sendRequest(requestString);
-    char* response = getResponse();
+    char* response = getResponse(0);
 
     free(requestString);
     close(sock);
@@ -223,7 +261,7 @@ char* getLasers(){
     sprintf(requestString, requestHolder, robotID);
 
     sendRequest(requestString);
-    char* response = getResponse();
+    char* response = getResponse(0);
     
     free(requestString);
     close(sock);
@@ -244,7 +282,7 @@ char* move(int speed){
     sprintf(requestString, requestHolder, robotID, speed);
 
     sendRequest(requestString);
-    char* response = getResponse();
+    char* response = getResponse(0);
     
     free(requestString);
     close(sock);
@@ -265,7 +303,7 @@ char* turn(int degrees){
     sprintf(requestString, requestHolder, robotID, degrees);
 
     sendRequest(requestString);
-    char* response = getResponse();
+    char* response = getResponse(0);
     
     free(requestString);
     close(sock);
@@ -286,7 +324,7 @@ char* stop(){
     sprintf(requestString, requestHolder, robotID);
 
     sendRequest(requestString);
-    char* response = getResponse();
+    char* response = getResponse(0);
     
     free(requestString);
     close(sock);
