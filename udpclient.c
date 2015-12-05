@@ -1,4 +1,3 @@
-
 /* Group 9: Mitchell Devenport, Nathan Jones,
  *	Richard Orr, and Sameer Singh
  * This program takes three inputs:
@@ -200,11 +199,11 @@ void draw(int n, int l)
 		getLasers();
 		getImage();
 		move(l);
-		sleep(1);
+		sleep(2);
 		stop();
 		getdGPS();
 		turn(n);
-		float waittime=(14.0/(float)n);
+		float waittime=(14.0/(float)n)-(1.0/(float)n);
 		waittime=waittime*1000000;
 		usleep(waittime);
 		stop();
@@ -465,10 +464,11 @@ void writeLasers()
                 sum = proto.class.payloadSize;
                 while(sum<proto.class.totalSize&&hi<proto.class.totalSize)
                 {
-			index = start + proto.class.offset;
+			//index = start + proto.class.offset;
                         recvfrom(sock, &proto, MAX, 0, (struct
                                 sockaddr *) &fromAddr, &fromSize);
                         sum += proto.class.payloadSize;
+			index = start+proto.class.offset;
                         for (i = 0; i<proto.class.payloadSize&&
 				hi<proto.class.totalSize; i++)
                         {
@@ -503,7 +503,7 @@ void writeImage()
 
 //printf("%d\n",proto.class.totalSize);
                 start = (char *) malloc(proto.class.totalSize);
-                index = start;
+                index = start+proto.class.offset;
                 for (i=0; i<proto.class.payloadSize&&
 			i<proto.class.totalSize; i++)
                 {
@@ -517,6 +517,7 @@ void writeImage()
                         recvfrom(sock, &proto, MAX, 0, (struct
                                 sockaddr *) &fromAddr, &fromSize);
                         sum += proto.class.payloadSize;
+			index = start+proto.class.offset;
                         for (i = 0; i<proto.class.payloadSize&&
 				hi<proto.class.totalSize; i++)
                         {
